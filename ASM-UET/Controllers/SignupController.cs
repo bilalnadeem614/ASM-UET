@@ -2,9 +2,9 @@
 
 namespace ASM_UET.Controllers
 {
-    public class LoginController : Controller
+    public class SignupController : Controller
     {
-        public IActionResult LoginPage()
+        public IActionResult SignupPage()
         {
             return View();
         }
