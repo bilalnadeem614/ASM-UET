@@ -1,0 +1,40 @@
+using Microsoft.AspNetCore.Mvc;
+using ASM_UET.Models;
+using ASM_UET.Services;
+
+namespace ASM_UET.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AuthController : ControllerBase
+    {
+        private readonly IAuthService _auth;
+
+        public AuthController(IAuthService auth)
+        {
+            _auth = auth;
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromForm] RegisterRequest req)
+        {
+            try
+            {
+                var res = await _auth.RegisterAsync(req);
+                return Ok(res);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromForm] LoginRequest req)
+        {
+            var res = await _auth.LoginAsync(req);
+            if (res == null) return Unauthorized(new { error = "Invalid credentials" });
+            return Ok(res);
+        }
+    }
+}
