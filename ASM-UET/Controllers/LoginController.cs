@@ -1,10 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ASM_UET.Models;
+using ASM_UET.Services;
+using System.Diagnostics;
 
 namespace ASM_UET.Controllers
 {
     public class LoginController : Controller
     {
+        private readonly IAuthService _authService;
+
+        public LoginController(IAuthService authService)
+        {
+            _authService = authService;
+        }
+
         public IActionResult LoginPage()
         {
             return View();
@@ -13,32 +22,62 @@ namespace ASM_UET.Controllers
         [HttpPost]
         public async Task<IActionResult> Login_Page([FromForm] LoginRequest model)
         {
-            using var client = new HttpClient();
-            var form = new MultipartFormDataContent
+            try
             {
-                { new StringContent(model.Email), "Email" },
-                { new StringContent(model.Password), "Password" }
-            };
+                Debug.WriteLine($"🔑 Login attempt for: {model.Email}");
+                
+                var result = await _authService.LoginAsync(model);
+                
+                if (result == null)
+                {
+                    Debug.WriteLine($"❌ Login FAILED for: {model.Email}");
+                    TempData["Error"] = "Invalid email or password";
+                    return View("LoginPage");
+                }
 
-            var resp = await client.PostAsync(new Uri(new Uri(Request.Scheme + "://" + Request.Host), "api/auth/login"), form);
-            if (!resp.IsSuccessStatusCode)
+                Debug.WriteLine($"✅ Login SUCCESSFUL for: {model.Email}, Role: {result.Role}");
+
+                // Store token in cookie with PROPER settings
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = Request.IsHttps, // TRUE for HTTPS, FALSE for HTTP
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTimeOffset.UtcNow.AddHours(2),
+                    Path = "/"
+                };
+                
+                Response.Cookies.Append("ASM_TOKEN", result.Token, cookieOptions);
+                
+                Debug.WriteLine($"🍪 Cookie set - Secure: {cookieOptions.Secure}, IsHttps: {Request.IsHttps}");
+                Debug.WriteLine($"🍪 Token length: {result.Token.Length}");
+
+                // Redirect based on role
+                var (action, controller) = result.Role switch
+                {
+                    0 => ("Index", "Admin"),
+                    1 => ("Index", "Teacher"),
+                    _ => ("Index", "Student")
+                };
+
+                Debug.WriteLine($"🔀 Redirecting to: /{controller}/{action}");
+                return RedirectToAction(action, controller);
+            }
+            catch (Exception ex)
             {
-                TempData["Error"] = "Invalid credentials";
+                Debug.WriteLine($"❌ Login ERROR: {ex.Message}");
+                TempData["Error"] = $"Login failed: {ex.Message}";
                 return View("LoginPage");
             }
+        }
 
-            var result = await resp.Content.ReadFromJsonAsync<AuthResponse>();
-            if (result == null)
-            {
-                TempData["Error"] = "Invalid server response";
-                return View("LoginPage");
-            }
-
-            Response.Cookies.Append("ASM_TOKEN", result.Token, new CookieOptions { HttpOnly = true });
-
-            if (result.Role == 0) return RedirectToAction("Index", "Admin");
-            if (result.Role == 1) return RedirectToAction("Index", "Teacher");
-            return RedirectToAction("Index", "Student");
+        [HttpGet]
+        public IActionResult Logout()
+        {
+            Debug.WriteLine("🚪 Logging out");
+            Response.Cookies.Delete("ASM_TOKEN");
+            TempData["Success"] = "Logged out successfully";
+            return RedirectToAction("LoginPage");
         }
     }
 }
