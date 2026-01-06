@@ -1,0 +1,655 @@
+/**
+ * ASM UET Admin Common CSS Styles
+ * Consistent styling across all admin pages
+ */
+
+/* ==================== GLOBAL ADMIN STYLES ==================== */
+
+.glass {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.sidebar-transition {
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal-backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+/* ==================== ANIMATIONS ==================== */
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.modal-content {
+    animation: slideDown 0.3s ease-out;
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+/* ==================== FORM STYLES ==================== */
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: transparent;
+    box-shadow: 0 0 0 2px #6366f1;
+}
+
+.form-input:invalid,
+.form-input.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 2px #ef4444;
+}
+
+.form-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: all 0.15s ease-in-out;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: transparent;
+    box-shadow: 0 0 0 2px #6366f1;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-error {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: none;
+}
+
+.form-error:not(.hidden) {
+    display: block;
+}
+
+.form-help {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* ==================== BUTTON STYLES ==================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+    border: 1px solid transparent;
+    text-decoration: none;
+}
+
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+}
+
+.btn-primary {
+    background: linear-gradient(to right, #4f46e5, #7c3aed);
+    color: #ffffff;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to right, #4338ca, #6d28d9);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: scale(1.05);
+}
+
+.btn-secondary {
+    background-color: #ffffff;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.btn-secondary:hover {
+    background-color: #f9fafb;
+}
+
+.btn-success {
+    background-color: #059669;
+    color: #ffffff;
+}
+
+.btn-success:hover {
+    background-color: #047857;
+}
+
+.btn-danger {
+    background-color: #dc2626;
+    color: #ffffff;
+}
+
+.btn-danger:hover {
+    background-color: #b91c1c;
+}
+
+.btn-warning {
+    background-color: #d97706;
+    color: #ffffff;
+}
+
+.btn-warning:hover {
+    background-color: #b45309;
+}
+
+.btn-info {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+.btn-info:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn:disabled:hover {
+    transform: none;
+}
+
+/* ==================== BADGE STYLES ==================== */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-width: 1px;
+}
+
+.badge-admin {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.badge-teacher {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+.badge-student {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
+.badge-success {
+    background-color: #f0fdf4;
+    color: #166534;
+    border-color: #bbf7d0;
+}
+
+.badge-warning {
+    background-color: #fefce8;
+    color: #a16207;
+    border-color: #fde047;
+}
+
+.badge-error {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.badge-info {
+    background-color: #eff6ff;
+    color: #1e40af;
+    border-color: #bfdbfe;
+}
+
+/* ==================== CARD STYLES ==================== */
+
+.card {
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.card-header {
+    background: linear-gradient(to right, #4f46e5, #7c3aed);
+    color: #ffffff;
+    padding: 1.5rem;
+}
+
+.card-header-green {
+    background: linear-gradient(to right, #059669, #10b981);
+    color: #ffffff;
+    padding: 1.5rem;
+}
+
+.card-header-orange {
+    background: linear-gradient(to right, #ea580c, #dc2626);
+    color: #ffffff;
+    padding: 1.5rem;
+}
+
+.card-header-blue {
+    background: linear-gradient(to right, #2563eb, #1d4ed8);
+    color: #ffffff;
+    padding: 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.card-footer {
+    padding: 1rem 1.5rem;
+    background-color: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* ==================== TABLE STYLES ==================== */
+
+.table-container {
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.table {
+    width: 100%;
+}
+
+.table-header {
+    background: linear-gradient(to right, #4f46e5, #7c3aed);
+    color: #ffffff;
+}
+
+.table-header th {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.table tbody tr {
+    transition: background-color 0.15s ease-in-out;
+}
+
+.table tbody tr:hover {
+    background-color: #eef2ff;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+.table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.table tbody td {
+    padding: 1rem 1.5rem;
+    white-space: nowrap;
+    font-size: 0.875rem;
+    color: #111827;
+}
+
+/* ==================== LOADING STATES ==================== */
+
+.skeleton {
+    animation: skeleton-loading 1.5s ease-in-out infinite alternate;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+    height: 1rem;
+    margin: 0.25rem 0;
+    border-radius: 0.25rem;
+}
+
+.skeleton-text-sm {
+    height: 0.75rem;
+    margin: 0.25rem 0;
+    border-radius: 0.25rem;
+}
+
+.skeleton-text-lg {
+    height: 1.5rem;
+    margin: 0.25rem 0;
+    border-radius: 0.25rem;
+}
+
+.skeleton-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+}
+
+.skeleton-avatar-sm {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+}
+
+.skeleton-avatar-lg {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+}
+
+.skeleton-button {
+    height: 2.5rem;
+    border-radius: 0.5rem;
+}
+
+.skeleton-card {
+    height: 8rem;
+    border-radius: 0.75rem;
+}
+
+/* ==================== PROGRESS BARS ==================== */
+
+.progress-bar {
+    width: 100%;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    height: 0.5rem;
+}
+
+.progress-fill {
+    height: 0.5rem;
+    border-radius: 9999px;
+    transition: all 0.3s ease-in-out;
+}
+
+.progress-excellent {
+    background: linear-gradient(to right, #10b981, #059669);
+}
+
+.progress-good {
+    background: linear-gradient(to right, #eab308, #d97706);
+}
+
+.progress-poor {
+    background: linear-gradient(to right, #ef4444, #dc2626);
+}
+
+/* ==================== RESPONSIVE UTILITIES ==================== */
+
+@media (max-width: 640px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .table thead th,
+    .table tbody td {
+        padding: 0.75rem 1rem;
+    }
+    
+    .btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* ==================== FOCUS STATES ==================== */
+
+.focus-ring {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+}
+
+/* ==================== HOVER EFFECTS ==================== */
+
+.hover-lift {
+    transition: transform 0.15s ease-in-out;
+}
+
+.hover-lift:hover {
+    transform: scale(1.05);
+}
+
+.hover-shadow {
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.hover-glow {
+    transition: all 0.15s ease-in-out;
+}
+
+.hover-glow:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(99, 102, 241, 0.25);
+}
+
+/* ==================== STATUS INDICATORS ==================== */
+
+.status-online {
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: #10b981;
+    border-radius: 50%;
+}
+
+.status-offline {
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: #ef4444;
+    border-radius: 50%;
+}
+
+.status-away {
+    width: 0.5rem;
+    height: 0.5rem;
+    background-color: #eab308;
+    border-radius: 50%;
+}
+
+/* ==================== NOTIFICATION OVERRIDES ==================== */
+
+.notification {
+    max-width: 400px;
+    word-wrap: break-word;
+}
+
+.notification-show {
+    transform: translateX(0) !important;
+    opacity: 1 !important;
+}
+
+/* ==================== ROLE BADGES ==================== */
+
+.role-badge-admin { 
+    background-color: #fef2f2; 
+    color: #b91c1c; 
+    border-color: #fecaca; 
+}
+
+.role-badge-teacher { 
+    background-color: #f0fdf4; 
+    color: #15803d; 
+    border-color: #bbf7d0; 
+}
+
+.role-badge-student { 
+    background-color: #eff6ff; 
+    color: #1d4ed8; 
+    border-color: #bfdbfe; 
+}
+
+/* ==================== TAB STYLES ==================== */
+
+.tab-btn {
+    border-bottom: 2px solid transparent;
+    color: #6b7280;
+}
+
+.tab-btn:hover {
+    color: #374151;
+    border-bottom-color: #d1d5db;
+}
+
+.tab-btn.active {
+    color: #4f46e5;
+    border-bottom-color: #4f46e5;
+}
+
+/* ==================== PRINT STYLES ==================== */
+
+@media print {
+    .sidebar,
+    .mobile-menu,
+    .notification-container,
+    .modal {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .glass {
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid #000;
+    }
+    
+    .btn-primary {
+        background: #000;
+        color: #fff;
+        border: 2px solid #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

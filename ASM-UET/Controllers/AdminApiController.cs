@@ -17,6 +17,8 @@ namespace ASM_UET.Controllers
             _adminService = adminService;
         }
 
+        // ==================== DASHBOARD ENDPOINTS ====================
+
         [HttpGet("dashboard/stats")]
         public async Task<IActionResult> GetDashboardStats()
         {
@@ -30,6 +32,8 @@ namespace ASM_UET.Controllers
                 return StatusCode(500, new { error = "Failed to retrieve dashboard statistics", details = ex.Message });
             }
         }
+
+        // ==================== COURSE ENDPOINTS ====================
 
         [HttpGet("courses")]
         public async Task<IActionResult> GetAllCourses()
@@ -132,6 +136,8 @@ namespace ASM_UET.Controllers
             }
         }
 
+        // ==================== USER MANAGEMENT ENDPOINTS ====================
+
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers([FromQuery] int? roleFilter = null)
         {
@@ -143,6 +149,194 @@ namespace ASM_UET.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = "Failed to retrieve users", details = ex.Message });
+            }
+        }
+
+        [HttpGet("users/{id}")]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            try
+            {
+                var user = await _adminService.GetUserByIdAsync(id);
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("not found"))
+                {
+                    return NotFound(new { error = ex.Message });
+                }
+                return StatusCode(500, new { error = "Failed to retrieve user details", details = ex.Message });
+            }
+        }
+
+        [HttpPost("users")]
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var user = await _adminService.CreateUserAsync(dto);
+                return CreatedAtAction(nameof(GetUserById), new { id = user.UserId }, user);
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("already exists"))
+                {
+                    return Conflict(new { error = ex.Message });
+                }
+                return BadRequest(new { error = "Failed to create user", details = ex.Message });
+            }
+        }
+
+        [HttpPut("users/{id}")]
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (id != dto.UserId)
+            {
+                return BadRequest(new { error = "User ID in URL does not match the ID in request body" });
+            }
+
+            try
+            {
+                var user = await _adminService.UpdateUserAsync(dto);
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("not found"))
+                {
+                    return NotFound(new { error = ex.Message });
+                }
+                if (ex.Message.Contains("already exists"))
+                {
+                    return Conflict(new { error = ex.Message });
+                }
+                return BadRequest(new { error = "Failed to update user", details = ex.Message });
+            }
+        }
+
+        [HttpDelete("users/{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            try
+            {
+                var result = await _adminService.DeleteUserAsync(id);
+                if (result)
+                {
+                    return Ok(new { message = $"User with ID {id} deleted successfully" });
+                }
+                return BadRequest(new { error = "Failed to delete user" });
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("not found"))
+                {
+                    return NotFound(new { error = ex.Message });
+                }
+                if (ex.Message.Contains("Cannot delete"))
+                {
+                    return Conflict(new { error = ex.Message });
+                }
+                return BadRequest(new { error = "Failed to delete user", details = ex.Message });
+            }
+        }
+
+        [HttpPost("users/{id}/toggle-status")]
+        public async Task<IActionResult> ToggleUserStatus(int id)
+        {
+            try
+            {
+                var result = await _adminService.ToggleUserStatusAsync(id);
+                if (result)
+                {
+                    return Ok(new { message = $"User status toggled successfully for user ID {id}" });
+                }
+                return BadRequest(new { error = "Failed to toggle user status" });
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("not found"))
+                {
+                    return NotFound(new { error = ex.Message });
+                }
+                return BadRequest(new { error = "Failed to toggle user status", details = ex.Message });
+            }
+        }
+
+        // ==================== REPORTS ENDPOINTS ====================
+
+        [HttpGet("reports/attendance")]
+        public async Task<IActionResult> GetAttendanceReport(
+            [FromQuery] int? courseId = null,
+            [FromQuery] int? studentId = null,
+            [FromQuery] string? startDate = null,
+            [FromQuery] string? endDate = null)
+        {
+            try
+            {
+                var filter = new AttendanceReportFilterDto
+                {
+                    CourseId = courseId,
+                    StudentId = studentId
+                };
+
+                // Parse date parameters
+                if (!string.IsNullOrEmpty(startDate) && DateOnly.TryParse(startDate, out var parsedStartDate))
+                {
+                    filter.StartDate = parsedStartDate;
+                }
+
+                if (!string.IsNullOrEmpty(endDate) && DateOnly.TryParse(endDate, out var parsedEndDate))
+                {
+                    filter.EndDate = parsedEndDate;
+                }
+
+                var report = await _adminService.GetAttendanceReportAsync(filter);
+                return Ok(report);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Failed to generate attendance report", details = ex.Message });
+            }
+        }
+
+        [HttpGet("reports/course-enrollment")]
+        public async Task<IActionResult> GetCourseEnrollmentReport()
+        {
+            try
+            {
+                var report = await _adminService.GetCourseEnrollmentReportAsync();
+                return Ok(report);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Failed to generate course enrollment report", details = ex.Message });
+            }
+        }
+
+        [HttpGet("reports/student-performance")]
+        public async Task<IActionResult> GetStudentPerformanceReport(
+            [FromQuery] int? studentId = null,
+            [FromQuery] int? courseId = null)
+        {
+            try
+            {
+                var report = await _adminService.GetStudentPerformanceReportAsync(studentId, courseId);
+                return Ok(report);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Failed to generate student performance report", details = ex.Message });
             }
         }
     }

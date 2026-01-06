@@ -1,0 +1,714 @@
+@{
+    ViewData["Title"] = "User Management";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - ASM UET</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/admin-common.css">
+    <data-page="users">
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-2xl z-50 transform -translate-x-full lg:translate-x-0 sidebar-transition">
+        <div class="p-6">
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                    <i class="fas fa-graduation-cap text-indigo-600 text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">ASM UET</h2>
+                    <p class="text-xs text-indigo-200">Admin Panel</p>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <a href="@Url.Action("Index", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="@Url.Action("Courses", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all">
+                    <i class="fas fa-book w-5"></i>
+                    <span class="font-medium">Courses</span>
+                </a>
+                <a href="@Url.Action("Users", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all">
+                    <i class="fas fa-users w-5"></i>
+                    <span class="font-medium">Users</span>
+                </a>
+                <a href="@Url.Action("Reports", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span class="font-medium">Reports</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="absolute bottom-0 left-0 right-0 p-6 border-t border-white border-opacity-20">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-medium text-sm">Admin User</p>
+                    <p class="text-xs text-indigo-200">Administrator</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Top Navbar -->
+        <header class="bg-white shadow-sm sticky top-0 z-30">
+            <div class="flex items-center justify-between px-6 py-4">
+                <div class="flex items-center space-x-4">
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileMenuBtn" class="lg:hidden text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">User Management</h1>
+                        <p class="text-sm text-gray-500">Manage teachers and students</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="flex items-center space-x-3 px-4 py-2 bg-gray-50 rounded-lg">
+                        <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-shield text-white text-sm"></i>
+                        </div>
+                        <div class="hidden md:block">
+                            <p class="text-sm font-medium text-gray-800">Admin</p>
+                            <p class="text-xs text-gray-500">Role: 0</p>
+                        </div>
+                    </div>
+
+                    <!-- Logout Button -->
+                    <a href="@Url.Action("LoginPage", "Login")" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all flex items-center space-x-2">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="hidden md:inline">Logout</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- User Management Content -->
+        <main class="p-6">
+            <!-- Header Section -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center space-x-2">
+                        <i class="fas fa-users text-indigo-600"></i>
+                        <span>All Users</span>
+                    </h2>
+                    <p class="text-sm text-gray-500 mt-1">Manage and organize all system users</p>
+                </div>
+                <button onclick="openAddModal()" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus mr-2"></i>
+                    <span class="font-medium">Add User</span>
+                </button>
+            </div>
+
+            <!-- Search and Filter Section -->
+            <div class="card mb-6">
+                <div class="card-body">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <!-- Role Filter Dropdown -->
+                        <div class="relative">
+                            <select id="roleFilter" class="form-select">
+                                <option value="">All Users</option>
+                                <option value="0">Admins</option>
+                                <option value="1">Teachers</option>
+                                <option value="2">Students</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Search Input -->
+                        <div class="flex-1 relative">
+                            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="searchInput" placeholder="Search by name or email..." 
+                                   class="form-input pl-12">
+                        </div>
+                        
+                        <!-- Refresh Button -->
+                        <button onclick="loadUsers()" class="btn btn-secondary">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            <span class="font-medium">Refresh</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="table-container">
+                <div class="overflow-x-auto">
+                    <table class="table">
+                        <thead class="table-header">
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Registered Date</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody" class="divide-y divide-gray-200">
+                            <!-- Users will be loaded here dynamically -->
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center">
+                                    <i class="fas fa-spinner fa-spin text-4xl text-indigo-600 mb-4"></i>
+                                    <p class="text-gray-500">Loading users...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
+        <div class="glass relative bg-white rounded-2xl shadow-2xl max-w-md w-full modal-content">
+            <div class="card-header rounded-t-2xl">
+                <h3 id="modalTitle" class="text-xl font-bold flex items-center space-x-2">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Add New User</span>
+                </h3>
+            </div>
+            
+            <form id="userForm" class="card-body space-y-4">
+                <input type="hidden" id="userId" value="">
+                
+                <!-- Role Selection -->
+                <div>
+                    <label for="userRole" class="form-label">
+                        Role <span class="text-red-500">*</span>
+                    </label>
+                    <select id="userRole" required class="form-select">
+                        <option value="">Select role...</option>
+                        <option value="0">Admin</option>
+                        <option value="1">Teacher</option>
+                        <option value="2">Student</option>
+                    </select>
+                    <div id="userRole-error" class="form-error hidden"></div>
+                </div>
+
+                <!-- Full Name -->
+                <div>
+                    <label for="fullName" class="form-label">
+                        Full Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="fullName" required class="form-input" placeholder="e.g., John Doe">
+                    <div id="fullName-error" class="form-error hidden"></div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="form-label">
+                        Email <span class="text-red-500">*</span>
+                    </label>
+                    <input type="email" id="email" required class="form-input" placeholder="e.g., john.doe@example.com">
+                    <div id="email-error" class="form-error hidden"></div>
+                </div>
+
+                <!-- Password (only for creation) -->
+                <div id="passwordSection">
+                    <label for="password" class="form-label">
+                        Password <span class="text-red-500">*</span>
+                    </label>
+                    <input type="password" id="password" class="form-input" placeholder="Enter password (min 6 characters)">
+                    <div id="password-error" class="form-error hidden"></div>
+                </div>
+
+                <!-- Confirm Password (only for creation) -->
+                <div id="confirmPasswordSection">
+                    <label for="confirmPassword" class="form-label">
+                        Confirm Password <span class="text-red-500">*</span>
+                    </label>
+                    <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm password">
+                    <div id="confirmPassword-error" class="form-error hidden"></div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex space-x-3 pt-4">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary flex-1">
+                        Cancel
+                    </button>
+                    <button type="submit" id="submitBtn" class="btn btn-primary flex-1">
+                        <i class="fas fa-save mr-2"></i>Save User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Details Modal -->
+    <div id="detailsModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="modal-backdrop absolute inset-0" onclick="closeDetailsModal()"></div>
+        <div class="glass relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full modal-content">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-2xl">
+                <h3 class="text-xl font-bold flex items-center space-x-2">
+                    <i class="fas fa-user"></i>
+                    <span>User Details</span>
+                </h3>
+            </div>
+            
+            <div class="p-6">
+                <div id="userDetailsContent">
+                    <!-- Details will be loaded here -->
+                </div>
+                
+                <div class="flex justify-end mt-6">
+                    <button onclick="closeDetailsModal()" 
+                            class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-all">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="modal-backdrop absolute inset-0" onclick="closeDeleteModal()"></div>
+        <div class="glass relative bg-white rounded-2xl shadow-2xl max-w-md w-full modal-content">
+            <div class="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-4 rounded-t-2xl">
+                <h3 class="text-xl font-bold flex items-center space-x-2">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Confirm Deletion</span>
+                </h3>
+            </div>
+            
+            <div class="card-body">
+                <p class="text-gray-700 mb-6">
+                    Are you sure you want to delete this user? This action cannot be undone.
+                    <span id="deleteUserName" class="font-bold block mt-2 text-red-600"></span>
+                </p>
+
+                <div id="deleteError" class="form-error hidden mb-4"></div>
+
+                <div class="flex space-x-3">
+                    <button type="button" onclick="closeDeleteModal()" class="btn btn-secondary flex-1">
+                        Cancel
+                    </button>
+                    <button type="button" id="confirmDeleteBtn" onclick="confirmDelete()" class="btn btn-danger flex-1">
+                        <i class="fas fa-trash mr-2"></i>Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Shared Scripts -->
+    <script src="~/js/notifications.js"></script>
+    <script src="~/js/admin-common.js"></script>
+
+    <script>
+        let users = [];
+        let deleteTargetId = null;
+        let currentFilter = '';
+
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+
+        function toggleMobileMenu() {
+            sidebar.classList.toggle('-translate-x-full');
+            mobileOverlay.classList.toggle('hidden');
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        mobileOverlay.addEventListener('click', toggleMobileMenu);
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            }
+        });
+
+        // Load users on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUsers();
+            
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', filterUsers);
+            
+            // Role filter functionality
+            document.getElementById('roleFilter').addEventListener('change', function() {
+                currentFilter = this.value;
+                loadUsers();
+            });
+        });
+
+        // Load users
+        async function loadUsers() {
+            try {
+                AdminUtils.showTableSkeleton('usersTableBody', 5, 3);
+                const filterParam = currentFilter ? `?roleFilter=${currentFilter}` : '';
+                const result = await AdminUtils.makeApiCall(`/Admin/GetUsers${filterParam}`);
+                users = result.data || [];
+                renderUsers(users);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('usersTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <i class="fas fa-exclamation-triangle text-6xl text-red-300 mb-4"></i>
+                            <p class="text-gray-500">Failed to load users</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Render users table
+        function renderUsers(usersToRender) {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (usersToRender.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">No users found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = usersToRender.map((user, index) => {
+                const roleConfig = getRoleConfig(user.role);
+                return `
+                    <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-indigo-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 ${roleConfig.bgClass} rounded-full flex items-center justify-center">
+                                    <i class="${roleConfig.icon} text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-900">${user.fullName}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-gray-700">${user.email}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${roleConfig.badgeClass}">
+                                ${user.roleName}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-gray-500">${formatDate(user.createdAt)}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center space-x-2">
+                                <button onclick="openDetailsModal(${user.userId})" 
+                                        class="px-3 py-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-lg transition-all flex items-center space-x-1">
+                                    <i class="fas fa-eye"></i>
+                                    <span class="hidden sm:inline">View</span>
+                                </button>
+                                <button onclick="openEditModal(${user.userId})" 
+                                        class="px-3 py-2 bg-green-100 text-green-600 hover:bg-green-200 rounded-lg transition-all flex items-center space-x-1">
+                                    <i class="fas fa-edit"></i>
+                                    <span class="hidden sm:inline">Edit</span>
+                                </button>
+                                <button onclick="openDeleteModal(${user.userId}, '${user.fullName.replace(/'/g, "\\'")}' )" 
+                                        class="px-3 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-all flex items-center space-x-1">
+                                    <i class="fas fa-trash"></i>
+                                    <span class="hidden sm:inline">Delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Helper function to get role configuration
+        function getRoleConfig(role) {
+            const configs = {
+                0: { 
+                    icon: 'fas fa-user-shield', 
+                    bgClass: 'bg-gradient-to-br from-red-500 to-red-600',
+                    badgeClass: 'role-badge-admin'
+                },
+                1: { 
+                    icon: 'fas fa-chalkboard-teacher', 
+                    bgClass: 'bg-gradient-to-br from-green-500 to-green-600',
+                    badgeClass: 'role-badge-teacher'
+                },
+                2: { 
+                    icon: 'fas fa-user-graduate', 
+                    bgClass: 'bg-gradient-to-br from-blue-500 to-blue-600',
+                    badgeClass: 'role-badge-student'
+                }
+            };
+            return configs[role] || configs[2];
+        }
+
+        // Format date helper
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        // Filter users
+        function filterUsers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = users.filter(user => 
+                user.fullName.toLowerCase().includes(searchTerm) ||
+                user.email.toLowerCase().includes(searchTerm)
+            );
+            renderUsers(filtered);
+        }
+
+        // Modal functions
+        function openAddModal() {
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-plus mr-2"></i>Add New User';
+            document.getElementById('userId').value = '';
+            document.getElementById('userForm').reset();
+            document.getElementById('passwordSection').style.display = 'block';
+            document.getElementById('confirmPasswordSection').style.display = 'block';
+            document.getElementById('password').required = true;
+            document.getElementById('confirmPassword').required = true;
+            AdminUtils.showModal('userModal');
+        }
+
+        function openEditModal(userId) {
+            const user = users.find(u => u.userId === userId);
+            if (!user) return;
+
+            document.getElementById('modalTitle').innerHTML = '<i class="fas fa-user-edit mr-2"></i>Edit User';
+            document.getElementById('userId').value = user.userId;
+            document.getElementById('userRole').value = user.role;
+            document.getElementById('fullName').value = user.fullName;
+            document.getElementById('email').value = user.email;
+            
+            // Hide password fields for editing
+            document.getElementById('passwordSection').style.display = 'none';
+            document.getElementById('confirmPasswordSection').style.display = 'none';
+            document.getElementById('password').required = false;
+            document.getElementById('confirmPassword').required = false;
+            
+            AdminUtils.showModal('userModal');
+        }
+
+        async function openDetailsModal(userId) {
+            try {
+                const response = await fetch(`/Admin/GetUserDetails?id=${userId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user details');
+                }
+                
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to fetch user details');
+                }
+                
+                const userDetails = result.data;
+                const roleConfig = getRoleConfig(userDetails.role);
+                
+                let additionalInfo = '';
+                if (userDetails.role === 1) { // Teacher
+                    additionalInfo = `
+                        <div class="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                            <h4 class="font-semibold text-green-800 mb-2">Teacher Information</h4>
+                            <p class="text-green-700">Assigned Courses: <span class="font-semibold">${userDetails.courseCount}</span></p>
+                        </div>
+                    `;
+                } else if (userDetails.role === 2) { // Student
+                    additionalInfo = `
+                        <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <h4 class="font-semibold text-blue-800 mb-2">Student Information</h4>
+                            <p class="text-blue-700">Enrollments: <span class="font-semibold">${userDetails.enrollmentCount}</span></p>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('userDetailsContent').innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-16 h-16 ${roleConfig.bgClass} rounded-full flex items-center justify-center">
+                                <i class="${roleConfig.icon} text-white text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900">${userDetails.fullName}</h3>
+                                <p class="text-gray-500">${userDetails.email}</p>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${roleConfig.badgeClass}">
+                                    ${userDetails.roleName}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm font-medium text-gray-500">User ID</label>
+                                <p class="text-gray-900">${userDetails.userId}</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-500">Created At</label>
+                                <p class="text-gray-900">${formatDate(userDetails.createdAt)}</p>
+                            </div>
+                        </div>
+                        
+                        ${additionalInfo}
+                    </div>
+                `;
+                
+                document.getElementById('detailsModal').classList.remove('hidden');
+                document.getElementById('detailsModal').classList.add('flex');
+            } catch (error) {
+                showError('Failed to load user details');
+            }
+        }
+
+        function closeModal() {
+            AdminUtils.closeModal('userModal');
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').classList.add('hidden');
+            document.getElementById('detailsModal').classList.remove('flex');
+        }
+
+        // Form submission
+        document.getElementById('userForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('userId').value;
+            const isEditing = !!userId;
+            
+            // Validate passwords for new users
+            if (!isEditing) {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (password !== confirmPassword) {
+                    AdminUtils.showFieldError(document.getElementById('confirmPassword'), 'Passwords do not match');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    AdminUtils.showFieldError(document.getElementById('password'), 'Password must be at least 6 characters long');
+                    return;
+                }
+            }
+            
+            const userData = {
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                role: parseInt(document.getElementById('userRole').value)
+            };
+
+            if (!isEditing) {
+                userData.password = document.getElementById('password').value;
+            } else {
+                userData.userId = parseInt(userId);
+            }
+
+            AdminUtils.setFormLoading(this, true);
+
+            try {
+                const endpoint = isEditing ? '/Admin/UpdateUser' : '/Admin/CreateUser';
+                const result = await AdminUtils.makeApiCall(endpoint, {
+                    method: 'POST',
+                    body: JSON.stringify(userData)
+                });
+
+                closeModal();
+                await loadUsers();
+                showSuccess(isEditing ? 'User updated successfully' : 'User created successfully');
+            } catch (error) {
+                console.error('Error saving user:', error);
+            } finally {
+                AdminUtils.setFormLoading(this, false);
+            }
+        });
+
+        // Delete functions
+        function openDeleteModal(userId, userName) {
+            deleteTargetId = userId;
+            document.getElementById('deleteUserName').textContent = userName;
+            document.getElementById('deleteError').classList.add('hidden');
+            AdminUtils.showModal('deleteModal');
+        }
+
+        function closeDeleteModal() {
+            deleteTargetId = null;
+            AdminUtils.closeModal('deleteModal');
+        }
+
+        async function confirmDelete() {
+            if (!deleteTargetId) return;
+
+            const deleteBtn = document.getElementById('confirmDeleteBtn');
+            const originalText = deleteBtn.innerHTML;
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting...';
+
+            try {
+                await AdminUtils.makeApiCall('/Admin/DeleteUser', {
+                    method: 'POST',
+                    body: JSON.stringify(deleteTargetId)
+                });
+
+                closeDeleteModal();
+                await loadUsers();
+                showSuccess('User deleted successfully');
+            } catch (error) {
+                const errorDiv = document.getElementById('deleteError');
+                errorDiv.textContent = error.message || 'Failed to delete user';
+                errorDiv.classList.remove('hidden');
+            } finally {
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = originalText;
+            }
+        }
+
+        // Notification functions
+        function showModalError(message) {
+            const errorDiv = document.getElementById('modalError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function showError(message) {
+            // You can implement a toast notification here
+            alert(message);
+        }
+
+        function showSuccess(message) {
+            // You can implement a toast notification here
+            alert(message);
+        }
+    </script>
+</body>
+</html>

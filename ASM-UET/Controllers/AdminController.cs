@@ -60,12 +60,21 @@ namespace ASM_UET.Controllers
             return View();
         }
 
+        // ==================== USER MANAGEMENT ACTIONS ====================
+
         [HttpGet]
-        public async Task<IActionResult> Users(int? roleFilter)
+        public IActionResult Users(int? roleFilter)
+        {
+            ViewData["Title"] = "User Management";
+            ViewData["RoleFilter"] = roleFilter;
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUsers(int? roleFilter)
         {
             try
             {
-                // Fetch users via API
                 using var client = CreateAuthorizedClient();
                 var endpoint = roleFilter.HasValue 
                     ? $"/api/admin/users?roleFilter={roleFilter}" 
@@ -76,22 +85,160 @@ namespace ASM_UET.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var users = await response.Content.ReadFromJsonAsync<List<UserDto>>();
-                    ViewData["Title"] = "User Management";
-                    ViewData["RoleFilter"] = roleFilter;
-                    return View(users ?? new List<UserDto>());
+                    return Json(new { success = true, data = users });
                 }
                 else
                 {
-                    TempData["Error"] = $"Failed to load users: {response.StatusCode}";
-                    return View(new List<UserDto>());
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Failed to fetch users", details = errorContent });
                 }
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error loading users: {ex.Message}";
-                return View(new List<UserDto>());
+                return Json(new { success = false, error = ex.Message });
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUserDetails(int id)
+        {
+            try
+            {
+                using var client = CreateAuthorizedClient();
+                var response = await client.GetAsync($"/api/admin/users/{id}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var userDetails = await response.Content.ReadFromJsonAsync<UserDetailsDto>();
+                    return Json(new { success = true, data = userDetails });
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return Json(new { success = false, error = "User not found" });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Failed to fetch user details", details = errorContent });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto userDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return Json(new { success = false, error = "Invalid user data", modelState = ModelState });
+                }
+
+                using var client = CreateAuthorizedClient();
+                var response = await client.PostAsJsonAsync("/api/admin/users", userDto);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var user = await response.Content.ReadFromJsonAsync<UserDto>();
+                    TempData["Success"] = "User created successfully!";
+                    return Json(new { success = true, data = user });
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "User with this email already exists", details = errorContent });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Failed to create user", details = errorContent });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto userDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return Json(new { success = false, error = "Invalid user data", modelState = ModelState });
+                }
+
+                using var client = CreateAuthorizedClient();
+                var response = await client.PutAsJsonAsync($"/api/admin/users/{userDto.UserId}", userDto);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var user = await response.Content.ReadFromJsonAsync<UserDto>();
+                    TempData["Success"] = "User updated successfully!";
+                    return Json(new { success = true, data = user });
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return Json(new { success = false, error = "User not found" });
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Email already exists", details = errorContent });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Failed to update user", details = errorContent });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            try
+            {
+                using var client = CreateAuthorizedClient();
+                var response = await client.DeleteAsync($"/api/admin/users/{id}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["Success"] = "User deleted successfully!";
+                    return Json(new { success = true });
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return Json(new { success = false, error = "User not found" });
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Cannot delete user with dependencies", details = errorContent });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Failed to delete user", details = errorContent });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        // ==================== OTHER ACTIONS ====================
 
         [HttpGet]
         public IActionResult Settings()
@@ -259,32 +406,173 @@ namespace ASM_UET.Controllers
             }
         }
 
+        // ==================== REPORTS ACTIONS ====================
+
         [HttpGet]
-        public async Task<IActionResult> GetUsersData(int? roleFilter)
+        public IActionResult Reports()
+        {
+            ViewData["Title"] = "Reports";
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAttendanceReport(
+            int? courseId = null,
+            int? studentId = null,
+            string? startDate = null,
+            string? endDate = null)
         {
             try
             {
                 using var client = CreateAuthorizedClient();
-                var endpoint = roleFilter.HasValue 
-                    ? $"/api/admin/users?roleFilter={roleFilter}" 
-                    : "/api/admin/users";
+                var queryParams = new List<string>();
+
+                if (courseId.HasValue)
+                    queryParams.Add($"courseId={courseId.Value}");
                 
-                var response = await client.GetAsync(endpoint);
+                if (studentId.HasValue)
+                    queryParams.Add($"studentId={studentId.Value}");
+                
+                if (!string.IsNullOrEmpty(startDate))
+                    queryParams.Add($"startDate={startDate}");
+                
+                if (!string.IsNullOrEmpty(endDate))
+                    queryParams.Add($"endDate={endDate}");
+
+                var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+                var response = await client.GetAsync($"/api/admin/reports/attendance{queryString}");
                 
                 if (response.IsSuccessStatusCode)
                 {
-                    var users = await response.Content.ReadFromJsonAsync<List<UserDto>>();
-                    return Json(new { success = true, data = users });
+                    var report = await response.Content.ReadFromJsonAsync<List<AttendanceReportDto>>();
+                    return Json(new { success = true, data = report });
                 }
                 else
                 {
-                    return Json(new { success = false, error = "Failed to fetch users" });
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Failed to generate attendance report", details = errorContent });
                 }
             }
             catch (Exception ex)
             {
                 return Json(new { success = false, error = ex.Message });
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCourseEnrollmentReport()
+        {
+            try
+            {
+                using var client = CreateAuthorizedClient();
+                var response = await client.GetAsync("/api/admin/reports/course-enrollment");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var report = await response.Content.ReadFromJsonAsync<CourseEnrollmentReportDto>();
+                    return Json(new { success = true, data = report });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Failed to generate course enrollment report", details = errorContent });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetStudentPerformanceReport(int? studentId = null, int? courseId = null)
+        {
+            try
+            {
+                using var client = CreateAuthorizedClient();
+                var queryParams = new List<string>();
+
+                if (studentId.HasValue)
+                    queryParams.Add($"studentId={studentId.Value}");
+                
+                if (courseId.HasValue)
+                    queryParams.Add($"courseId={courseId.Value}");
+
+                var queryString = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+                var response = await client.GetAsync($"/api/admin/reports/student-performance{queryString}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var report = await response.Content.ReadFromJsonAsync<StudentPerformanceReportDto>();
+                    return Json(new { success = true, data = report });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Failed to generate student performance report", details = errorContent });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCoursesForDropdown()
+        {
+            try
+            {
+                using var client = CreateAuthorizedClient();
+                var response = await client.GetAsync("/api/admin/courses");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var courses = await response.Content.ReadFromJsonAsync<List<CourseDto>>();
+                    return Json(new { success = true, data = courses });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Failed to fetch courses", details = errorContent });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetStudentsForDropdown()
+        {
+            try
+            {
+                using var client = CreateAuthorizedClient();
+                var response = await client.GetAsync("/api/admin/users?roleFilter=2");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var students = await response.Content.ReadFromJsonAsync<List<UserDto>>();
+                    return Json(new { success = true, data = students });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, error = "Failed to fetch students", details = errorContent });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        // Keep existing method for backwards compatibility
+        [HttpGet]
+        public async Task<IActionResult> GetUsersData(int? roleFilter)
+        {
+            return await GetUsers(roleFilter);
         }
     }
 }

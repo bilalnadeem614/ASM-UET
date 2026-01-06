@@ -11,34 +11,8 @@
     <title>@ViewData["Title"] - ASM UET</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .glass {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-        }
-        .sidebar-transition {
-            transition: transform 0.3s ease-in-out;
-        }
-        .modal-backdrop {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-        }
-        @@keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .modal-content {
-            animation: slideDown 0.3s ease-out;
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/admin-common.css">
+    <data-page="courses">
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
 
@@ -60,19 +34,19 @@
 
             <!-- Navigation -->
             <nav class="space-y-2">
-                <a href="@Url.Action("Index", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all">
+                <a href="@Url.Action("Index", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all">
                     <i class="fas fa-chart-line w-5"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
-                <a href="@Url.Action("Courses", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-white bg-opacity-20 backdrop-blur-sm hover:bg-opacity-30 transition-all">
+                <a href="@Url.Action("Courses", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all">
                     <i class="fas fa-book w-5"></i>
                     <span class="font-medium">Courses</span>
                 </a>
-                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all">
+                <a href="@Url.Action("Users", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all">
                     <i class="fas fa-users w-5"></i>
                     <span class="font-medium">Users</span>
                 </a>
-                <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all">
+                <a href="@Url.Action("Reports", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all">
                     <i class="fas fa-chart-bar w-5"></i>
                     <span class="font-medium">Reports</span>
                 </a>
@@ -147,41 +121,43 @@
                     </h2>
                     <p class="text-sm text-gray-500 mt-1">Manage and organize all courses</p>
                 </div>
-                <button onclick="openAddModal()" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg transition-all flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105">
-                    <i class="fas fa-plus"></i>
+                <button onclick="openAddModal()" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus mr-2"></i>
                     <span class="font-medium">Add Course</span>
                 </button>
             </div>
 
             <!-- Search and Filter Section -->
-            <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
-                <div class="flex flex-col md:flex-row gap-4">
-                    <div class="flex-1 relative">
-                        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        <input type="text" id="searchInput" placeholder="Search courses by code, name, or teacher..." 
-                               class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+            <div class="card mb-6">
+                <div class="card-body">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1 relative">
+                            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="searchInput" placeholder="Search courses by code, name, or teacher..." 
+                                   class="form-input pl-12">
+                        </div>
+                        <button onclick="loadCourses()" class="btn btn-secondary">
+                            <i class="fas fa-sync-alt mr-2"></i>
+                            <span class="font-medium">Refresh</span>
+                        </button>
                     </div>
-                    <button onclick="loadCourses()" class="px-6 py-3 bg-indigo-100 text-indigo-600 hover:bg-indigo-200 rounded-lg transition-all flex items-center space-x-2">
-                        <i class="fas fa-sync-alt"></i>
-                        <span class="font-medium">Refresh</span>
-                    </button>
                 </div>
             </div>
 
             <!-- Courses Table -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="table-container">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                    <table class="table">
+                        <thead class="table-header">
                             <tr>
-                                <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Course Code</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Course Name</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Teacher</th>
-                                <th class="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Actions</th>
+                                <th>Course Code</th>
+                                <th>Course Name</th>
+                                <th>Teacher</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="coursesTableBody" class="divide-y divide-gray-200">
-                            <!-- Courses will be loaded here dynamically -->
+                            <!-- Loading Skeleton -->
                             <tr>
                                 <td colspan="4" class="px-6 py-12 text-center">
                                     <i class="fas fa-spinner fa-spin text-4xl text-indigo-600 mb-4"></i>
@@ -199,58 +175,51 @@
     <div id="courseModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
         <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
         <div class="glass relative bg-white rounded-2xl shadow-2xl max-w-md w-full modal-content">
-            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-4 rounded-t-2xl">
+            <div class="card-header rounded-t-2xl">
                 <h3 id="modalTitle" class="text-xl font-bold flex items-center space-x-2">
                     <i class="fas fa-book"></i>
                     <span>Add New Course</span>
                 </h3>
             </div>
             
-            <form id="courseForm" class="p-6 space-y-4">
+            <form id="courseForm" class="card-body space-y-4">
                 <input type="hidden" id="courseId" value="">
                 
                 <!-- Course Code -->
                 <div>
-                    <label for="courseCode" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="courseCode" class="form-label">
                         Course Code <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" id="courseCode" required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                           placeholder="e.g., CS101">
+                    <input type="text" id="courseCode" required class="form-input" placeholder="e.g., CS101">
+                    <div id="courseCode-error" class="form-error hidden"></div>
                 </div>
 
                 <!-- Course Name -->
                 <div>
-                    <label for="courseName" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="courseName" class="form-label">
                         Course Name <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" id="courseName" required
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                           placeholder="e.g., Introduction to Programming">
+                    <input type="text" id="courseName" required class="form-input" placeholder="e.g., Introduction to Programming">
+                    <div id="courseName-error" class="form-error hidden"></div>
                 </div>
 
                 <!-- Teacher Dropdown -->
                 <div>
-                    <label for="teacherId" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="teacherId" class="form-label">
                         Assign Teacher <span class="text-red-500">*</span>
                     </label>
-                    <select id="teacherId" required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    <select id="teacherId" required class="form-select">
                         <option value="">Select a teacher...</option>
                     </select>
+                    <div id="teacherId-error" class="form-error hidden"></div>
                 </div>
-
-                <!-- Error Message -->
-                <div id="modalError" class="hidden p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm"></div>
 
                 <!-- Action Buttons -->
                 <div class="flex space-x-3 pt-4">
-                    <button type="button" onclick="closeModal()" 
-                            class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium">
+                    <button type="button" onclick="closeModal()" class="btn btn-secondary flex-1">
                         Cancel
                     </button>
-                    <button type="submit" id="submitBtn"
-                            class="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all font-medium shadow-lg">
+                    <button type="submit" id="submitBtn" class="btn btn-primary flex-1">
                         <i class="fas fa-save mr-2"></i>Save Course
                     </button>
                 </div>
@@ -269,21 +238,19 @@
                 </h3>
             </div>
             
-            <div class="p-6">
+            <div class="card-body">
                 <p class="text-gray-700 mb-6">
                     Are you sure you want to delete this course? This action cannot be undone.
                     <span id="deleteCourseName" class="font-bold block mt-2 text-red-600"></span>
                 </p>
 
-                <div id="deleteError" class="hidden mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm"></div>
+                <div id="deleteError" class="form-error hidden mb-4"></div>
 
                 <div class="flex space-x-3">
-                    <button type="button" onclick="closeDeleteModal()" 
-                            class="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium">
+                    <button type="button" onclick="closeDeleteModal()" class="btn btn-secondary flex-1">
                         Cancel
                     </button>
-                    <button type="button" id="confirmDeleteBtn" onclick="confirmDelete()"
-                            class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all font-medium shadow-lg">
+                    <button type="button" id="confirmDeleteBtn" onclick="confirmDelete()" class="btn btn-danger flex-1">
                         <i class="fas fa-trash mr-2"></i>Delete
                     </button>
                 </div>
@@ -291,30 +258,14 @@
         </div>
     </div>
 
+    <!-- Load Shared Scripts -->
+    <script src="~/js/notifications.js"></script>
+    <script src="~/js/admin-common.js"></script>
+
     <script>
         let courses = [];
         let teachers = [];
         let deleteTargetId = null;
-
-        // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const sidebar = document.getElementById('sidebar');
-        const mobileOverlay = document.getElementById('mobileOverlay');
-
-        function toggleMobileMenu() {
-            sidebar.classList.toggle('-translate-x-full');
-            mobileOverlay.classList.toggle('hidden');
-        }
-
-        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-        mobileOverlay.addEventListener('click', toggleMobileMenu);
-
-        window.addEventListener('resize', function() {
-            if (window.innerWidth >= 1024) {
-                sidebar.classList.remove('-translate-x-full');
-                mobileOverlay.classList.add('hidden');
-            }
-        });
 
         // Load courses on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -322,17 +273,15 @@
             loadCourses();
             
             // Search functionality
-            document.getElementById('searchInput').addEventListener('input', filterCourses);
+            document.getElementById('searchInput').addEventListener('input', AdminUtils.debounce(filterCourses, 300));
         });
 
         // Load teachers for dropdown
         async function loadTeachers() {
             try {
-                const response = await fetch('/api/admin/teachers');
-                if (response.ok) {
-                    teachers = await response.json();
-                    populateTeacherDropdown();
-                }
+                const result = await AdminUtils.makeApiCall('/Admin/GetTeachers');
+                teachers = result.data || [];
+                populateTeacherDropdown();
             } catch (error) {
                 console.error('Error loading teachers:', error);
             }
@@ -349,16 +298,20 @@
         // Load courses
         async function loadCourses() {
             try {
-                const response = await fetch('/api/admin/courses');
-                if (response.ok) {
-                    courses = await response.json();
-                    renderCourses(courses);
-                } else {
-                    showError('Failed to load courses');
-                }
+                AdminUtils.showTableSkeleton('coursesTableBody', 4, 3);
+                const result = await AdminUtils.makeApiCall('/Admin/GetCourses');
+                courses = result.data || [];
+                renderCourses(courses);
             } catch (error) {
                 console.error('Error loading courses:', error);
-                showError('Error loading courses');
+                document.getElementById('coursesTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center">
+                            <i class="fas fa-exclamation-triangle text-6xl text-red-300 mb-4"></i>
+                            <p class="text-gray-500">Failed to load courses</p>
+                        </td>
+                    </tr>
+                `;
             }
         }
 
@@ -397,13 +350,13 @@
                     <td class="px-6 py-4 whitespace-nowrap text-center">
                         <div class="flex items-center justify-center space-x-2">
                             <button onclick="openEditModal(${course.courseId})" 
-                                    class="px-4 py-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-lg transition-all flex items-center space-x-1">
-                                <i class="fas fa-edit"></i>
+                                    class="btn btn-sm bg-blue-100 text-blue-600 hover:bg-blue-200 border-blue-200">
+                                <i class="fas fa-edit mr-1"></i>
                                 <span class="hidden sm:inline">Edit</span>
                             </button>
                             <button onclick="openDeleteModal(${course.courseId}, '${course.courseName.replace(/'/g, "\\'")}' )" 
-                                    class="px-4 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-all flex items-center space-x-1">
-                                <i class="fas fa-trash"></i>
+                                    class="btn btn-sm bg-red-100 text-red-600 hover:bg-red-200 border-red-200">
+                                <i class="fas fa-trash mr-1"></i>
                                 <span class="hidden sm:inline">Delete</span>
                             </button>
                         </div>
@@ -428,9 +381,7 @@
             document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus mr-2"></i>Add New Course';
             document.getElementById('courseId').value = '';
             document.getElementById('courseForm').reset();
-            document.getElementById('modalError').classList.add('hidden');
-            document.getElementById('courseModal').classList.remove('hidden');
-            document.getElementById('courseModal').classList.add('flex');
+            AdminUtils.showModal('courseModal');
         }
 
         function openEditModal(courseId) {
@@ -442,14 +393,11 @@
             document.getElementById('courseCode').value = course.courseCode;
             document.getElementById('courseName').value = course.courseName;
             document.getElementById('teacherId').value = course.teacherId;
-            document.getElementById('modalError').classList.add('hidden');
-            document.getElementById('courseModal').classList.remove('hidden');
-            document.getElementById('courseModal').classList.add('flex');
+            AdminUtils.showModal('courseModal');
         }
 
         function closeModal() {
-            document.getElementById('courseModal').classList.add('hidden');
-            document.getElementById('courseModal').classList.remove('flex');
+            AdminUtils.closeModal('courseModal');
         }
 
         // Form submission
@@ -463,41 +411,26 @@
                 teacherId: parseInt(document.getElementById('teacherId').value)
             };
 
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+            if (courseId) {
+                courseData.courseId = parseInt(courseId);
+            }
+
+            AdminUtils.setFormLoading(this, true);
 
             try {
-                let response;
-                if (courseId) {
-                    courseData.courseId = parseInt(courseId);
-                    response = await fetch(`/api/admin/courses/${courseId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(courseData)
-                    });
-                } else {
-                    response = await fetch('/api/admin/courses', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(courseData)
-                    });
-                }
+                const endpoint = courseId ? '/Admin/UpdateCourse' : '/Admin/CreateCourse';
+                const result = await AdminUtils.makeApiCall(endpoint, {
+                    method: 'POST',
+                    body: JSON.stringify(courseData)
+                });
 
-                if (response.ok) {
-                    closeModal();
-                    await loadCourses();
-                    showSuccess(courseId ? 'Course updated successfully' : 'Course created successfully');
-                } else {
-                    const error = await response.json();
-                    showModalError(error.details || error.error || 'Failed to save course');
-                }
+                closeModal();
+                await loadCourses();
+                showSuccess(courseId ? 'Course updated successfully' : 'Course created successfully');
             } catch (error) {
                 console.error('Error saving course:', error);
-                showModalError('Error saving course');
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Course';
+                AdminUtils.setFormLoading(this, false);
             }
         });
 
@@ -506,62 +439,38 @@
             deleteTargetId = courseId;
             document.getElementById('deleteCourseName').textContent = courseName;
             document.getElementById('deleteError').classList.add('hidden');
-            document.getElementById('deleteModal').classList.remove('hidden');
-            document.getElementById('deleteModal').classList.add('flex');
+            AdminUtils.showModal('deleteModal');
         }
 
         function closeDeleteModal() {
             deleteTargetId = null;
-            document.getElementById('deleteModal').classList.add('hidden');
-            document.getElementById('deleteModal').classList.remove('flex');
+            AdminUtils.closeModal('deleteModal');
         }
 
         async function confirmDelete() {
             if (!deleteTargetId) return;
 
             const deleteBtn = document.getElementById('confirmDeleteBtn');
+            const originalText = deleteBtn.innerHTML;
             deleteBtn.disabled = true;
             deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting...';
 
             try {
-                const response = await fetch(`/api/admin/courses/${deleteTargetId}`, {
-                    method: 'DELETE'
+                await AdminUtils.makeApiCall(`/Admin/DeleteCourse?id=${deleteTargetId}`, {
+                    method: 'POST'
                 });
 
-                if (response.ok) {
-                    closeDeleteModal();
-                    await loadCourses();
-                    showSuccess('Course deleted successfully');
-                } else {
-                    const error = await response.json();
-                    document.getElementById('deleteError').textContent = error.error || 'Failed to delete course';
-                    document.getElementById('deleteError').classList.remove('hidden');
-                }
+                closeDeleteModal();
+                await loadCourses();
+                showSuccess('Course deleted successfully');
             } catch (error) {
-                console.error('Error deleting course:', error);
-                document.getElementById('deleteError').textContent = 'Error deleting course';
-                document.getElementById('deleteError').classList.remove('hidden');
+                const errorDiv = document.getElementById('deleteError');
+                errorDiv.textContent = error.message || 'Failed to delete course';
+                errorDiv.classList.remove('hidden');
             } finally {
                 deleteBtn.disabled = false;
-                deleteBtn.innerHTML = '<i class="fas fa-trash mr-2"></i>Delete';
+                deleteBtn.innerHTML = originalText;
             }
-        }
-
-        // Notification functions
-        function showModalError(message) {
-            const errorDiv = document.getElementById('modalError');
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('hidden');
-        }
-
-        function showError(message) {
-            // You can implement a toast notification here
-            alert(message);
-        }
-
-        function showSuccess(message) {
-            // You can implement a toast notification here
-            alert(message);
         }
     </script>
 </body>

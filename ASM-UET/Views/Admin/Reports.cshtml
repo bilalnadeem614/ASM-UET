@@ -1,0 +1,887 @@
+@{
+    ViewData["Title"] = "Reports";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - ASM UET</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+        .tab-transition {
+            transition: all 0.3s ease-in-out;
+        }
+        .progress-bar-excellent { background: linear-gradient(to right, #10b981, #059669); }
+        .progress-bar-good { background: linear-gradient(to right, #f59e0b, #d97706); }
+        .progress-bar-poor { background: linear-gradient(to right, #ef4444, #dc2626); }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-2xl z-50 transform -translate-x-full lg:translate-x-0 sidebar-transition">
+        <div class="p-6">
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                    <i class="fas fa-graduation-cap text-indigo-600 text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">ASM UET</h2>
+                    <p class="text-xs text-indigo-200">Admin Panel</p>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <a href="@Url.Action("Index", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="@Url.Action("Courses", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all">
+                    <i class="fas fa-book w-5"></i>
+                    <span class="font-medium">Courses</span>
+                </a>
+                <a href="@Url.Action("Users", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all">
+                    <i class="fas fa-users w-5"></i>
+                    <span class="font-medium">Users</span>
+                </a>
+                <a href="@Url.Action("Reports", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-white bg-opacity-20 backdrop-blur-sm hover:bg-opacity-30 transition-all">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span class="font-medium">Reports</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="absolute bottom-0 left-0 right-0 p-6 border-t border-white border-opacity-20">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-medium text-sm">Admin User</p>
+                    <p class="text-xs text-indigo-200">Administrator</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Top Navbar -->
+        <header class="bg-white shadow-sm sticky top-0 z-30">
+            <div class="flex items-center justify-between px-6 py-4">
+                <div class="flex items-center space-x-4">
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileMenuBtn" class="lg:hidden text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">Reports & Analytics</h1>
+                        <p class="text-sm text-gray-500">Comprehensive reports and insights</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="flex items-center space-x-3 px-4 py-2 bg-gray-50 rounded-lg">
+                        <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-shield text-white text-sm"></i>
+                        </div>
+                        <div class="hidden md:block">
+                            <p class="text-sm font-medium text-gray-800">Admin</p>
+                            <p class="text-xs text-gray-500">Role: 0</p>
+                        </div>
+                    </div>
+
+                    <!-- Logout Button -->
+                    <a href="@Url.Action("LoginPage", "Login")" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all flex items-center space-x-2">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="hidden md:inline">Logout</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Reports Content -->
+        <main class="p-6">
+            <!-- Header Section -->
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center space-x-2 mb-2">
+                    <i class="fas fa-chart-bar text-indigo-600"></i>
+                    <span>System Reports</span>
+                </h2>
+                <p class="text-sm text-gray-500">Generate and view detailed reports on attendance, enrollments, and performance</p>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="bg-white rounded-xl shadow-sm mb-6">
+                <div class="border-b border-gray-200">
+                    <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                        <button onclick="switchTab('attendance')" 
+                                class="tab-btn py-4 px-1 border-b-2 font-medium text-sm transition-all tab-transition" 
+                                id="attendance-tab">
+                            <i class="fas fa-calendar-check mr-2"></i>Attendance Report
+                        </button>
+                        <button onclick="switchTab('enrollment')" 
+                                class="tab-btn py-4 px-1 border-b-2 font-medium text-sm transition-all tab-transition" 
+                                id="enrollment-tab">
+                            <i class="fas fa-users-cog mr-2"></i>Course Enrollment
+                        </button>
+                        <button onclick="switchTab('performance')" 
+                                class="tab-btn py-4 px-1 border-b-2 font-medium text-sm transition-all tab-transition" 
+                                id="performance-tab">
+                            <i class="fas fa-trophy mr-2"></i>Student Performance
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Attendance Report Tab -->
+                <div id="attendance-content" class="tab-panel">
+                    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-4 -m-6 mb-6 rounded-t-xl">
+                            <h3 class="text-xl font-bold flex items-center space-x-2">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Attendance Report</span>
+                            </h3>
+                        </div>
+
+                        <!-- Filters -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Course</label>
+                                <select id="attendanceCourseFilter" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <option value="">All Courses</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Student</label>
+                                <select id="attendanceStudentFilter" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <option value="">All Students</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                <input type="date" id="attendanceStartDate" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                <input type="date" id="attendanceEndDate" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mb-6">
+                            <button onclick="generateAttendanceReport()" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg transition-all flex items-center space-x-2 shadow-lg">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Generate Report</span>
+                            </button>
+                        </div>
+
+                        <!-- Results Table -->
+                        <div id="attendanceResults" class="hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-gradient-to-r from-gray-100 to-gray-200">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Classes</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Present</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Absent</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Late</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="attendanceTableBody" class="bg-white divide-y divide-gray-200">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div id="attendanceLoading" class="hidden text-center py-12">
+                            <i class="fas fa-spinner fa-spin text-4xl text-indigo-600 mb-4"></i>
+                            <p class="text-gray-500">Generating attendance report...</p>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="attendanceEmpty" class="text-center py-12">
+                            <i class="fas fa-calendar-times text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500 text-lg mb-2">No Attendance Data</p>
+                            <p class="text-gray-400">Apply filters and click "Generate Report" to view attendance statistics</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Course Enrollment Report Tab -->
+                <div id="enrollment-content" class="tab-panel hidden">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-4 -m-6 mb-6 rounded-t-xl">
+                            <h3 class="text-xl font-bold flex items-center space-x-2">
+                                <i class="fas fa-users-cog"></i>
+                                <span>Course Enrollment Report</span>
+                            </h3>
+                        </div>
+
+                        <!-- Summary Cards -->
+                        <div id="enrollmentSummary" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 hidden">
+                            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-blue-100 text-sm">Total Courses</p>
+                                        <p id="totalCourses" class="text-3xl font-bold">0</p>
+                                    </div>
+                                    <i class="fas fa-book text-4xl text-blue-200"></i>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-green-100 text-sm">Total Enrollments</p>
+                                        <p id="totalEnrollments" class="text-3xl font-bold">0</p>
+                                    </div>
+                                    <i class="fas fa-users text-4xl text-green-200"></i>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-purple-100 text-sm">Avg per Course</p>
+                                        <p id="avgEnrollment" class="text-3xl font-bold">0</p>
+                                    </div>
+                                    <i class="fas fa-chart-line text-4xl text-purple-200"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chart -->
+                        <div id="enrollmentChart" class="mb-6 hidden">
+                            <div class="chart-container">
+                                <canvas id="enrollmentChartCanvas"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Results Table -->
+                        <div id="enrollmentResults" class="hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-gradient-to-r from-gray-100 to-gray-200">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course Code</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course Name</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enrollments</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Attendance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="enrollmentTableBody" class="bg-white divide-y divide-gray-200">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div id="enrollmentLoading" class="text-center py-12">
+                            <i class="fas fa-spinner fa-spin text-4xl text-green-600 mb-4"></i>
+                            <p class="text-gray-500">Loading enrollment report...</p>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="enrollmentEmpty" class="hidden text-center py-12">
+                            <i class="fas fa-user-slash text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500 text-lg mb-2">No Enrollment Data</p>
+                            <p class="text-gray-400">No course enrollment information available</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Performance Report Tab -->
+                <div id="performance-content" class="tab-panel hidden">
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white px-6 py-4 -m-6 mb-6 rounded-t-xl">
+                            <h3 class="text-xl font-bold flex items-center space-x-2">
+                                <i class="fas fa-trophy"></i>
+                                <span>Student Performance Report</span>
+                            </h3>
+                        </div>
+
+                        <!-- Filters -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Student (Optional)</label>
+                                <select id="performanceStudentFilter" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <option value="">All Students</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Course (Optional)</label>
+                                <select id="performanceCourseFilter" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <option value="">All Courses</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mb-6">
+                            <button onclick="generatePerformanceReport()" class="px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white rounded-lg transition-all flex items-center space-x-2 shadow-lg">
+                                <i class="fas fa-trophy"></i>
+                                <span>Generate Report</span>
+                            </button>
+                        </div>
+
+                        <!-- Summary -->
+                        <div id="performanceSummary" class="hidden mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-6 rounded-xl">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-indigo-100 text-sm">Total Students</p>
+                                            <p id="totalStudents" class="text-3xl font-bold">0</p>
+                                        </div>
+                                        <i class="fas fa-user-graduate text-4xl text-indigo-200"></i>
+                                    </div>
+                                </div>
+                                <div class="bg-gradient-to-br from-teal-500 to-teal-600 text-white p-6 rounded-xl">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-teal-100 text-sm">Overall Avg Attendance</p>
+                                            <p id="overallAvg" class="text-3xl font-bold">0</p>
+                                        </div>
+                                        <i class="fas fa-percentage text-4xl text-teal-200"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Results Table -->
+                        <div id="performanceResults" class="hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-gradient-to-r from-gray-100 to-gray-200">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(0)">
+                                                Student Name <i class="fas fa-sort ml-1"></i>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(1)">
+                                                Course <i class="fas fa-sort ml-1"></i>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(2)">
+                                                Classes <i class="fas fa-sort ml-1"></i>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(3)">
+                                                Present <i class="fas fa-sort ml-1"></i>
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(4)">
+                                                Percentage <i class="fas fa-sort ml-1"></i>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="performanceTableBody" class="bg-white divide-y divide-gray-200">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div id="performanceLoading" class="hidden text-center py-12">
+                            <i class="fas fa-spinner fa-spin text-4xl text-orange-600 mb-4"></i>
+                            <p class="text-gray-500">Generating performance report...</p>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="performanceEmpty" class="text-center py-12">
+                            <i class="fas fa-medal text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500 text-lg mb-2">No Performance Data</p>
+                            <p class="text-gray-400">Apply filters and click "Generate Report" to view student performance</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Load Shared Scripts -->
+    <script src="~/js/notifications.js"></script>
+    <script src="~/js/admin-common.js"></script>
+
+    <script>
+        // Global variables
+        let currentTab = 'attendance';
+        let enrollmentChart = null;
+        let performanceData = [];
+        let sortDirection = 1; // 1 for ascending, -1 for descending
+
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+
+        function toggleMobileMenu() {
+            sidebar.classList.toggle('-translate-x-full');
+            mobileOverlay.classList.toggle('hidden');
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        mobileOverlay.addEventListener('click', toggleMobileMenu);
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            }
+        });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            switchTab('attendance');
+            loadDropdowns();
+            loadCourseEnrollmentReport();
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-500', 'text-indigo-600');
+                btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            });
+            
+            document.getElementById(`${tabName}-tab`).classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            document.getElementById(`${tabName}-tab`).classList.add('border-indigo-500', 'text-indigo-600');
+
+            // Show/hide content
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            document.getElementById(`${tabName}-content`).classList.remove('hidden');
+        }
+
+        // Load dropdowns
+        async function loadDropdowns() {
+            try {
+                // Load courses
+                const coursesResponse = await fetch('/Admin/GetCoursesForDropdown');
+                if (coursesResponse.ok) {
+                    const coursesResult = await coursesResponse.json();
+                    if (coursesResult.success) {
+                        populateDropdown('attendanceCourseFilter', coursesResult.data, 'courseId', 'courseName');
+                        populateDropdown('performanceCourseFilter', coursesResult.data, 'courseId', 'courseName');
+                    }
+                }
+
+                // Load students
+                const studentsResponse = await fetch('/Admin/GetStudentsForDropdown');
+                if (studentsResponse.ok) {
+                    const studentsResult = await studentsResponse.json();
+                    if (studentsResult.success) {
+                        populateDropdown('attendanceStudentFilter', studentsResult.data, 'userId', 'fullName');
+                        populateDropdown('performanceStudentFilter', studentsResult.data, 'userId', 'fullName');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading dropdowns:', error);
+            }
+        }
+
+        function populateDropdown(elementId, data, valueField, textField) {
+            const select = document.getElementById(elementId);
+            const currentFirstOption = select.children[0].outerHTML;
+            select.innerHTML = currentFirstOption;
+            
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item[valueField];
+                option.textContent = item[textField];
+                select.appendChild(option);
+            });
+        }
+
+        // Attendance Report
+        async function generateAttendanceReport() {
+            showLoading('attendanceLoading', 'attendanceEmpty');
+            hideElement('attendanceResults');
+
+            try {
+                const courseId = document.getElementById('attendanceCourseFilter').value;
+                const studentId = document.getElementById('attendanceStudentFilter').value;
+                const startDate = document.getElementById('attendanceStartDate').value;
+                const endDate = document.getElementById('attendanceEndDate').value;
+
+                const params = new URLSearchParams();
+                if (courseId) params.append('courseId', courseId);
+                if (studentId) params.append('studentId', studentId);
+                if (startDate) params.append('startDate', startDate);
+                if (endDate) params.append('endDate', endDate);
+
+                const queryString = params.toString();
+                const url = `/Admin/GetAttendanceReport${queryString ? '?' + queryString : ''}`;
+
+                const response = await fetch(url);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        renderAttendanceReport(result.data);
+                    } else {
+                        showError('Failed to generate attendance report: ' + result.error);
+                        showElement('attendanceEmpty');
+                    }
+                } else {
+                    showError('Failed to generate attendance report');
+                    showElement('attendanceEmpty');
+                }
+            } catch (error) {
+                console.error('Error generating attendance report:', error);
+                showError('Error generating attendance report');
+                showElement('attendanceEmpty');
+            } finally {
+                hideElement('attendanceLoading');
+            }
+        }
+
+        function renderAttendanceReport(data) {
+            const tbody = document.getElementById('attendanceTableBody');
+            
+            if (data.length === 0) {
+                showElement('attendanceEmpty');
+                hideElement('attendanceResults');
+                return;
+            }
+
+            tbody.innerHTML = data.map(item => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-graduate text-indigo-600"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${item.studentName}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.courseName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.totalClasses}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">${item.presentCount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold">${item.absentCount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-yellow-600 font-semibold">${item.lateCount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${renderProgressBar(item.attendancePercentage)}
+                    </td>
+                </tr>
+            `).join('');
+
+            showElement('attendanceResults');
+            hideElement('attendanceEmpty');
+        }
+
+        function renderProgressBar(percentage) {
+            let colorClass = 'progress-bar-poor';
+            let textColor = 'text-red-600';
+            
+            if (percentage >= 75) {
+                colorClass = 'progress-bar-excellent';
+                textColor = 'text-green-600';
+            } else if (percentage >= 50) {
+                colorClass = 'progress-bar-good';
+                textColor = 'text-yellow-600';
+            }
+
+            return `
+                <div class="flex items-center space-x-2">
+                    <div class="flex-1 bg-gray-200 rounded-full h-2">
+                        <div class="${colorClass} h-2 rounded-full transition-all duration-300" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="text-sm font-medium ${textColor}">${percentage}%</span>
+                </div>
+            `;
+        }
+
+        // Course Enrollment Report
+        async function loadCourseEnrollmentReport() {
+            showLoading('enrollmentLoading');
+            hideElement('enrollmentSummary');
+            hideElement('enrollmentChart');
+            hideElement('enrollmentResults');
+
+            try {
+                const response = await fetch('/Admin/GetCourseEnrollmentReport');
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        renderCourseEnrollmentReport(result.data);
+                    } else {
+                        showError('Failed to load enrollment report: ' + result.error);
+                        showElement('enrollmentEmpty');
+                    }
+                } else {
+                    showError('Failed to load enrollment report');
+                    showElement('enrollmentEmpty');
+                }
+            } catch (error) {
+                console.error('Error loading enrollment report:', error);
+                showError('Error loading enrollment report');
+                showElement('enrollmentEmpty');
+            } finally {
+                hideElement('enrollmentLoading');
+            }
+        }
+
+        function renderCourseEnrollmentReport(data) {
+            if (!data.courses || data.courses.length === 0) {
+                showElement('enrollmentEmpty');
+                return;
+            }
+
+            // Update summary
+            document.getElementById('totalCourses').textContent = data.totalCourses;
+            document.getElementById('totalEnrollments').textContent = data.totalEnrollments;
+            document.getElementById('avgEnrollment').textContent = data.averageEnrollmentPerCourse;
+            showElement('enrollmentSummary');
+
+            // Render chart
+            renderEnrollmentChart(data.courses);
+
+            // Render table
+            const tbody = document.getElementById('enrollmentTableBody');
+            tbody.innerHTML = data.courses.map(course => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${course.courseCode}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${course.courseName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-chalkboard-teacher text-green-600 text-xs"></i>
+                            </div>
+                            <span class="text-sm text-gray-900">${course.teacherName}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            ${course.enrollmentCount} students
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${renderSimpleProgressBar(course.averageAttendance)}
+                    </td>
+                </tr>
+            `).join('');
+
+            showElement('enrollmentResults');
+            hideElement('enrollmentEmpty');
+        }
+
+        function renderEnrollmentChart(courses) {
+            const ctx = document.getElementById('enrollmentChartCanvas').getContext('2d');
+            
+            if (enrollmentChart) {
+                enrollmentChart.destroy();
+            }
+
+            enrollmentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: courses.map(c => c.courseCode),
+                    datasets: [{
+                        label: 'Enrollments',
+                        data: courses.map(c => c.enrollmentCount),
+                        backgroundColor: 'rgba(79, 70, 229, 0.6)',
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            showElement('enrollmentChart');
+        }
+
+        function renderSimpleProgressBar(percentage) {
+            let colorClass = 'bg-red-500';
+            
+            if (percentage >= 75) {
+                colorClass = 'bg-green-500';
+            } else if (percentage >= 50) {
+                colorClass = 'bg-yellow-500';
+            }
+
+            return `
+                <div class="flex items-center space-x-2">
+                    <div class="flex-1 bg-gray-200 rounded-full h-2 w-20">
+                        <div class="${colorClass} h-2 rounded-full transition-all duration-300" style="width: ${percentage}%"></div>
+                    </div>
+                    <span class="text-sm font-medium text-gray-600">${percentage}%</span>
+                </div>
+            `;
+        }
+
+        // Student Performance Report
+        async function generatePerformanceReport() {
+            showLoading('performanceLoading', 'performanceEmpty');
+            hideElement('performanceResults');
+            hideElement('performanceSummary');
+
+            try {
+                const studentId = document.getElementById('performanceStudentFilter').value;
+                const courseId = document.getElementById('performanceCourseFilter').value;
+
+                const params = new URLSearchParams();
+                if (studentId) params.append('studentId', studentId);
+                if (courseId) params.append('courseId', courseId);
+
+                const queryString = params.toString();
+                const url = `/Admin/GetStudentPerformanceReport${queryString ? '?' + queryString : ''}`;
+
+                const response = await fetch(url);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        renderPerformanceReport(result.data);
+                    } else {
+                        showError('Failed to generate performance report: ' + result.error);
+                        showElement('performanceEmpty');
+                    }
+                } else {
+                    showError('Failed to generate performance report');
+                    showElement('performanceEmpty');
+                }
+            } catch (error) {
+                console.error('Error generating performance report:', error);
+                showError('Error generating performance report');
+                showElement('performanceEmpty');
+            } finally {
+                hideElement('performanceLoading');
+            }
+        }
+
+        function renderPerformanceReport(data) {
+            if (!data.students || data.students.length === 0) {
+                showElement('performanceEmpty');
+                return;
+            }
+
+            performanceData = [...data.students];
+
+            // Update summary
+            document.getElementById('totalStudents').textContent = data.totalStudents;
+            document.getElementById('overallAvg').textContent = data.overallAverageAttendance + '%';
+            showElement('performanceSummary');
+
+            // Render table
+            renderPerformanceTable(performanceData);
+            showElement('performanceResults');
+            hideElement('performanceEmpty');
+        }
+
+        function renderPerformanceTable(students) {
+            const tbody = document.getElementById('performanceTableBody');
+            tbody.innerHTML = students.map(student => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-graduate text-indigo-600"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${student.studentName}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.courseName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.totalClasses}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">${student.presentCount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${renderProgressBar(student.attendancePercentage)}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Table sorting
+        function sortTable(columnIndex) {
+            const fields = ['studentName', 'courseName', 'totalClasses', 'presentCount', 'attendancePercentage'];
+            const field = fields[columnIndex];
+            
+            performanceData.sort((a, b) => {
+                let aValue = a[field];
+                let bValue = b[field];
+                
+                if (typeof aValue === 'string') {
+                    return sortDirection * aValue.localeCompare(bValue);
+                } else {
+                    return sortDirection * (aValue - bValue);
+                }
+            });
+            
+            sortDirection *= -1;
+            renderPerformanceTable(performanceData);
+        }
+
+        // Utility functions
+        function showLoading(loadingId, emptyId = null) {
+            showElement(loadingId);
+            if (emptyId) hideElement(emptyId);
+        }
+
+        function showElement(elementId) {
+            document.getElementById(elementId).classList.remove('hidden');
+        }
+
+        function hideElement(elementId) {
+            document.getElementById(elementId).classList.add('hidden');
+        }
+
+        function showError(message) {
+            // You can implement a toast notification here
+            alert(message);
+        }
+    </script>
+</body>
+</html>
