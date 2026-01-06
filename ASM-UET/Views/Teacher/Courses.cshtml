@@ -1,0 +1,162 @@
+@model List<ASM_UET.Models.TeacherCourseDto>
+@{
+    ViewData["Title"] = "My Courses";
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    var teacherId = ViewData["TeacherId"] as int? ?? 0;
+}
+
+<div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">My Courses</h1>
+                <p class="text-gray-600">
+                    Manage your assigned courses and view student enrollment details.
+                </p>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <a href="@Url.Action("Index", "Teacher")" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-all">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <!-- Empty State -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-book-open text-4xl text-gray-400"></i>
+            </div>
+            <h3 class="text-2xl font-semibold text-gray-900 mb-4">No Courses Assigned</h3>
+            <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                You don't have any courses assigned to you yet. Please contact your administrator to get courses assigned.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="@Url.Action("Index", "Teacher")" 
+                   class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all">
+                    <i class="fas fa-tachometer-alt mr-2"></i>
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Courses Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach (var course in Model)
+            {
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+                    <!-- Course Header -->
+                    <div class="bg-gradient-to-r from-emerald-500 to-teal-600 p-6 text-white">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-book text-xl"></i>
+                            </div>
+                            <span class="text-xs font-semibold bg-white bg-opacity-20 px-2 py-1 rounded-full">
+                                @course.CourseCode
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">@course.CourseName</h3>
+                        <p class="text-emerald-100 text-sm">
+                            @course.EnrollmentCount @(course.EnrollmentCount == 1 ? "student" : "students") enrolled
+                        </p>
+                    </div>
+
+                    <!-- Course Content -->
+                    <div class="p-6">
+                        <!-- Quick Stats -->
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-emerald-600">@course.EnrollmentCount</p>
+                                <p class="text-xs text-gray-500">Students</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-blue-600">@course.CourseCode</p>
+                                <p class="text-xs text-gray-500">Course Code</p>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="space-y-3">
+                            <a href="@Url.Action("MarkAttendance", "Teacher", new { courseId = course.CourseId })" 
+                               class="w-full inline-flex items-center justify-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all">
+                                <i class="fas fa-clipboard-check mr-2"></i>
+                                Mark Attendance
+                            </a>
+                            
+                            <div class="grid grid-cols-2 gap-2">
+                                <a href="@Url.Action("CourseStudents", "Teacher", new { courseId = course.CourseId })" 
+                                   class="inline-flex items-center justify-center px-3 py-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-lg transition-all text-sm">
+                                    <i class="fas fa-users mr-1"></i>
+                                    Students
+                                </a>
+                                
+                                <a href="@Url.Action("AttendanceHistory", "Teacher", new { courseId = course.CourseId })" 
+                                   class="inline-flex items-center justify-center px-3 py-2 bg-purple-100 text-purple-600 hover:bg-purple-200 rounded-lg transition-all text-sm">
+                                    <i class="fas fa-chart-bar mr-1"></i>
+                                    Reports
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Footer -->
+                    <div class="px-6 py-3 bg-gray-50 border-t border-gray-200">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-500">Course ID: @course.CourseId</span>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-calendar mr-1"></i>
+                                <span>Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-chart-pie text-emerald-600 mr-3"></i>
+                Teaching Summary
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <p class="text-3xl font-bold text-emerald-600">@Model.Count</p>
+                    <p class="text-sm text-gray-500">Total Courses</p>
+                </div>
+                
+                <div class="text-center">
+                    <p class="text-3xl font-bold text-blue-600">@Model.Sum(c => c.EnrollmentCount)</p>
+                    <p class="text-sm text-gray-500">Total Students</p>
+                </div>
+                
+                <div class="text-center">
+                    <p class="text-3xl font-bold text-purple-600">@(Model.Any() ? Math.Round((decimal)Model.Sum(c => c.EnrollmentCount) / Model.Count, 1) : 0)</p>
+                    <p class="text-sm text-gray-500">Avg Students/Course</p>
+                </div>
+                
+                <div class="text-center">
+                    <p class="text-3xl font-bold text-yellow-600">@Model.Count(c => c.EnrollmentCount > 0)</p>
+                    <p class="text-sm text-gray-500">Active Courses</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any course-specific JavaScript functionality here
+        console.log('Courses page loaded with @Model.Count courses');
+    });
+</script>
+}

@@ -75,8 +75,8 @@ namespace ASM_UET.Services
 
             var claims = new[] {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-                new Claim("email", user.Email),
-                new Claim("role", user.Role.ToString())
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role.ToString())
             };
 
             var token = new JwtSecurityToken(issuer, audience, claims,

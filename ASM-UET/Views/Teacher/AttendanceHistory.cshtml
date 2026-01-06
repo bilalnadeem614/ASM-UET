@@ -1,0 +1,249 @@
+@{
+    ViewData["Title"] = ViewData["Title"]?.ToString() ?? "Attendance History";
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    var courseId = ViewData["CourseId"] as int? ?? 0;
+    var course = ViewData["Course"] as ASM_UET.Models.TeacherCourseDto;
+}
+
+<div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Attendance History</h1>
+                @if (course != null)
+                {
+                    <div class="flex items-center space-x-2 text-lg">
+                        <span class="font-semibold text-emerald-600 dark:text-emerald-400">@course.CourseCode</span>
+                        <span class="text-gray-400">•</span>
+                        <span class="text-gray-700 dark:text-gray-300">@course.CourseName</span>
+                    </div>
+                }
+            </div>
+            <div class="mt-4 md:mt-0 flex space-x-3">
+                <a href="@Url.Action("Courses", "Teacher")" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-all">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Courses
+                </a>
+                @if (courseId > 0)
+                {
+                    <a href="@Url.Action("MarkAttendance", "Teacher", new { courseId = courseId })" 
+                       class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all">
+                        <i class="fas fa-clipboard-check mr-2"></i>
+                        Mark Attendance
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Filter Options</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+                <input type="date" id="startDate" 
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+                <input type="date" id="endDate" 
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                <select id="statusFilter" 
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                    <option value="">All Status</option>
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Late">Late</option>
+                </select>
+            </div>
+            
+            <div class="flex items-end">
+                <button onclick="loadAttendanceHistory()" 
+                        class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all">
+                    <i class="fas fa-search mr-2"></i>
+                    Search
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance History Content -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-t-xl">
+            <h2 class="text-xl font-bold flex items-center">
+                <i class="fas fa-history mr-3"></i>
+                Attendance Records
+            </h2>
+        </div>
+        
+        <div class="p-6" id="attendanceHistoryContent">
+            <!-- Default content - will be replaced by JavaScript -->
+            <div class="text-center py-12">
+                <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-chart-bar text-2xl text-emerald-600 dark:text-emerald-400"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Attendance History</h3>
+                <p class="text-gray-500 dark:text-gray-400 mb-6">
+                    Use the filters above to view attendance records for this course.
+                </p>
+                <button onclick="loadAttendanceHistory()" 
+                        class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all">
+                    <i class="fas fa-download mr-2"></i>
+                    Load History
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (courseId == 0)
+    {
+        <!-- No Course Selected State -->
+        <div class="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl p-6">
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">No Course Selected</h3>
+                    <p class="text-sm text-yellow-600 dark:text-yellow-300 mt-1">
+                        Please select a course from your courses list to view attendance history.
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default date range (last 30 days)
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+        
+        document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+        
+        // Load initial data if courseId is available
+        @if (courseId > 0)
+        {
+            <text>loadAttendanceHistory();</text>
+        }
+    });
+
+    async function loadAttendanceHistory() {
+        const courseId = @courseId;
+        
+        if (courseId === 0) {
+            showNoDataMessage('Please select a course to view attendance history.');
+            return;
+        }
+
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const status = document.getElementById('statusFilter').value;
+        
+        // Show loading state
+        document.getElementById('attendanceHistoryContent').innerHTML = `
+            <div class="text-center py-12">
+                <i class="fas fa-spinner fa-spin text-4xl text-emerald-600 mb-4"></i>
+                <p class="text-gray-500 dark:text-gray-400">Loading attendance history...</p>
+            </div>
+        `;
+
+        try {
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+            if (status) params.append('status', status);
+            params.append('courseId', courseId);
+
+            // For now, we'll show a placeholder since we don't have the actual API endpoint
+            // In a real implementation, you would call something like:
+            // const response = await fetch(`/Teacher/GetAttendanceHistory?${params.toString()}`);
+            
+            setTimeout(() => {
+                showPlaceholderData();
+            }, 1000);
+            
+        } catch (error) {
+            console.error('Error loading attendance history:', error);
+            showErrorMessage('Failed to load attendance history. Please try again.');
+        }
+    }
+
+    function showPlaceholderData() {
+        document.getElementById('attendanceHistoryContent').innerHTML = `
+            <div class="space-y-4">
+                <div class="text-center mb-6">
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Attendance history feature is under development. 
+                        This would show detailed attendance records with filtering capabilities.
+                    </p>
+                </div>
+                
+                <!-- Sample attendance record -->
+                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-semibold text-gray-900 dark:text-gray-100">Today's Attendance</h4>
+                        <span class="text-sm text-gray-500">${new Date().toLocaleDateString()}</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div class="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+                            <p class="text-2xl font-bold text-green-600 dark:text-green-400">--</p>
+                            <p class="text-xs text-green-600 dark:text-green-400">Present</p>
+                        </div>
+                        <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                            <p class="text-2xl font-bold text-red-600 dark:text-red-400">--</p>
+                            <p class="text-xs text-red-600 dark:text-red-400">Absent</p>
+                        </div>
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
+                            <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">--</p>
+                            <p class="text-xs text-yellow-600 dark:text-yellow-400">Late</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-8">
+                    <a href="${'@Url.Action("MarkAttendance", "Teacher", new { courseId = courseId })'}" 
+                       class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all">
+                        <i class="fas fa-clipboard-check mr-2"></i>
+                        Mark Today's Attendance
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    function showNoDataMessage(message) {
+        document.getElementById('attendanceHistoryContent').innerHTML = `
+            <div class="text-center py-12">
+                <i class="fas fa-info-circle text-4xl text-blue-300 mb-4"></i>
+                <p class="text-gray-500 dark:text-gray-400">${message}</p>
+            </div>
+        `;
+    }
+
+    function showErrorMessage(message) {
+        document.getElementById('attendanceHistoryContent').innerHTML = `
+            <div class="text-center py-12">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
+                <p class="text-red-500">${message}</p>
+                <button onclick="loadAttendanceHistory()" 
+                        class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all">
+                    Try Again
+                </button>
+            </div>
+        `;
+    }
+</script>
+}

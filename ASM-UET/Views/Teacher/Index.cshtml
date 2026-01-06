@@ -1,0 +1,254 @@
+@model ASM_UET.Models.TeacherStatsDto
+@{
+    ViewData["Title"] = "Teacher Dashboard";
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    var teacherId = ViewData["TeacherId"] as int? ?? 0;
+}
+
+<div class="max-w-7xl mx-auto">
+    <!-- Welcome Section -->
+    <div class="mb-8">
+        <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-8 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold mb-2">Welcome back, Teacher! ??</h1>
+                    <p class="text-emerald-100 text-lg">
+                        Here's an overview of your courses and students today.
+                    </p>
+                </div>
+                <div class="hidden md:block">
+                    <div class="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-chalkboard-teacher text-4xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model != null)
+    {
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Courses -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-book-reader text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-gray-900">@Model.TotalCourses</p>
+                        <p class="text-sm text-gray-500">Total Courses</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Students -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-users text-emerald-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-gray-900">@Model.TotalStudents</p>
+                        <p class="text-sm text-gray-500">Total Students</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Average Attendance -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-gray-900">@Model.AverageAttendance%</p>
+                        <p class="text-sm text-gray-500">Avg Attendance</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Classes Today -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-calendar-day text-purple-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-gray-900">@Model.TotalCourses</p>
+                        <p class="text-sm text-gray-500">Classes Today</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Courses Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Courses List -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-book-reader text-emerald-600 mr-3"></i>
+                        My Courses
+                    </h2>
+                </div>
+                <div class="p-6" id="coursesContainer">
+                    <div class="text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-3xl text-emerald-600 mb-4"></i>
+                        <p class="text-gray-500">Loading courses...</p>
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 rounded-b-xl">
+                    <a href="@Url.Action("Courses", "Teacher")" 
+                       class="text-emerald-600 hover:text-emerald-700 font-medium flex items-center">
+                        <span>View All Courses</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-clock text-blue-600 mr-3"></i>
+                        Recent Activity
+                    </h2>
+                </div>
+                <div class="p-6">
+                    @if (Model.RecentAttendances != null && Model.RecentAttendances.Any())
+                    {
+                        <div class="space-y-4">
+                            @foreach (var attendance in Model.RecentAttendances.Take(5))
+                            {
+                                <div class="flex items-center justify-between py-2">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                                            <i class="fas fa-clipboard-check text-sm text-gray-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900">@attendance.CourseName</p>
+                                            <p class="text-xs text-gray-500">@attendance.Date.ToString("MMM dd, yyyy")</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs px-2 py-1 bg-emerald-100 text-emerald-600 rounded-full">
+                                        @attendance.StudentCount students
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-8">
+                            <i class="fas fa-history text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">No recent activity</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                <i class="fas fa-bolt text-yellow-500 mr-3"></i>
+                Quick Actions
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="showMarkAttendanceModal()" 
+                        class="flex items-center justify-center p-4 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200">
+                    <i class="fas fa-clipboard-check text-emerald-600 text-xl mr-3"></i>
+                    <span class="font-medium text-emerald-700">Mark Attendance</span>
+                </button>
+                
+                <a href="@Url.Action("Courses", "Teacher")" 
+                   class="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200">
+                    <i class="fas fa-users text-blue-600 text-xl mr-3"></i>
+                    <span class="font-medium text-blue-700">View Students</span>
+                </a>
+                
+                <a href="@Url.Action("AttendanceHistory", "Teacher")" 
+                   class="flex items-center justify-center p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-200">
+                    <i class="fas fa-chart-bar text-purple-600 text-xl mr-3"></i>
+                    <span class="font-medium text-purple-700">View Reports</span>
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Loading State -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <i class="fas fa-spinner fa-spin text-4xl text-emerald-600 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Loading Dashboard</h3>
+            <p class="text-gray-500">Please wait while we fetch your teaching data...</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCourses();
+    });
+
+    async function loadCourses() {
+        try {
+            const response = await fetch('@Url.Action("GetAssignedCourses", "Teacher")');
+            const result = await response.json();
+            
+            const container = document.getElementById('coursesContainer');
+            
+            if (result.success && result.data.length > 0) {
+                container.innerHTML = result.data.slice(0, 4).map(course => `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-3 last:mb-0">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-book text-emerald-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900">${course.courseName}</p>
+                                <p class="text-sm text-gray-500">${course.courseCode} • ${course.enrollmentCount || 0} students</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <a href="@Url.Action("MarkAttendance", "Teacher")?courseId=${course.courseId}" 
+                               class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm rounded-lg transition-colors">
+                                Mark Attendance
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-book-open text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">No courses assigned yet</p>
+                        <p class="text-sm text-gray-400 mt-2">Contact your administrator to get courses assigned</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading courses:', error);
+            document.getElementById('coursesContainer').innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
+                    <p class="text-red-500">Failed to load courses</p>
+                </div>
+            `;
+        }
+    }
+
+    // Function to show mark attendance modal (inherited from layout)
+    function showMarkAttendanceModal() {
+        // This function is defined in the _TeacherLayout.cshtml
+        if (typeof window.showMarkAttendanceModal !== 'undefined') {
+            window.showMarkAttendanceModal();
+        } else {
+            // Fallback - redirect to courses page
+            window.location.href = '@Url.Action("Courses", "Teacher")';
+        }
+    }
+</script>
+}

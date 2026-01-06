@@ -1,0 +1,548 @@
+@model List<ASM_UET.Models.EnrolledStudentDto>
+@{
+    ViewData["Title"] = ViewData["Title"]?.ToString() ?? "Mark Attendance";
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    var courseId = ViewData["CourseId"] as int? ?? 0;
+    var courseName = ViewData["CourseName"]?.ToString() ?? "";
+    var courseCode = ViewData["CourseCode"]?.ToString() ?? "";
+    var teacherId = ViewData["TeacherId"] as int? ?? 0;
+}
+
+<div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Mark Attendance</h1>
+                <div class="flex items-center space-x-2 text-lg">
+                    <span class="font-semibold text-emerald-600">@courseCode</span>
+                    <span class="text-gray-400">•</span>
+                    <span class="text-gray-700">@courseName</span>
+                </div>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <a href="@Url.Action("Courses", "Teacher")" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-all">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Courses
+                </a>
+            </div>
+        </div>
+        
+        <!-- Course Info Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-users text-emerald-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900">@Model.Count</p>
+                        <p class="text-sm text-gray-500">Total Students</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-calendar-day text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900" id="selectedDate">Today</p>
+                        <p class="text-sm text-gray-500">Selected Date</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-clipboard-check text-purple-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900" id="markedCount">0</p>
+                        <p class="text-sm text-gray-500">Marked</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Picker and Controls -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center space-x-4">
+                <label for="attendanceDate" class="text-sm font-medium text-gray-700">
+                    Attendance Date:
+                </label>
+                <input type="date" 
+                       id="attendanceDate" 
+                       class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white text-gray-900 transition-all"
+                       value="" />
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <!-- Bulk Actions -->
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm font-medium text-gray-700">Mark All:</span>
+                    <button onclick="markAll('Present')" 
+                            class="px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-all">
+                        Present
+                    </button>
+                    <button onclick="markAll('Absent')" 
+                            class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-all">
+                        Absent
+                    </button>
+                    <button onclick="clearAll()" 
+                            class="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded-lg transition-all">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <!-- No Students Message -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-user-graduate text-4xl text-gray-400"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Students Enrolled</h3>
+            <p class="text-gray-500 mb-6">
+                There are currently no students enrolled in this course.
+            </p>
+            <a href="@Url.Action("Courses", "Teacher")" 
+               class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Courses
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- Attendance Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
+                <h2 class="text-xl font-bold flex items-center">
+                    <i class="fas fa-clipboard-list mr-3"></i>
+                    Student Attendance
+                </h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Student Information
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Current Status
+                            </th>
+                            <th class="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Mark Attendance
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody" class="bg-white divide-y divide-gray-200">
+                        @foreach (var student in Model)
+                        {
+                            <tr class="hover:bg-gray-50 transition-colors" data-student-id="@student.StudentId">
+                                <!-- Student Information -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                                            @student.StudentName.Split(' ').Select(n => n.FirstOrDefault()).Take(2).Aggregate("", (a, b) => a + b)
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">@student.StudentName</div>
+                                            <div class="text-sm text-gray-500">@student.Email</div>
+                                            <div class="text-xs text-gray-400 mt-1">
+                                                Enrolled: @student.EnrollmentDate.ToString("MMM dd, yyyy")
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Current Attendance Stats -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center">
+                                            <div class="w-16 bg-gray-200 rounded-full h-2 mr-3">
+                                                <div class="bg-emerald-500 h-2 rounded-full transition-all duration-300" 
+                                                     style="width: @student.AttendancePercentage%"></div>
+                                            </div>
+                                            <span class="text-sm font-medium text-gray-900">@student.AttendancePercentage%</span>
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            @student.PresentCount/@student.TotalClasses classes attended
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Radio Button Group -->
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex justify-center space-x-6">
+                                        <!-- Present -->
+                                        <label class="flex items-center cursor-pointer group">
+                                            <input type="radio" 
+                                                   name="attendance_@student.StudentId" 
+                                                   value="Present" 
+                                                   class="sr-only" 
+                                                   onchange="updateAttendanceStatus(@student.StudentId, 'Present')" />
+                                            <div class="relative">
+                                                <div class="w-6 h-6 bg-white border-2 border-green-300 rounded-full group-hover:border-green-400 transition-all duration-200"></div>
+                                                <div class="absolute inset-0 w-6 h-6 bg-green-500 rounded-full scale-0 group-hover:scale-75 transition-transform duration-200 opacity-0"></div>
+                                                <i class="fas fa-check absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs opacity-0 transition-opacity duration-200"></i>
+                                            </div>
+                                            <span class="ml-2 text-sm font-medium text-green-700">Present</span>
+                                        </label>
+
+                                        <!-- Absent -->
+                                        <label class="flex items-center cursor-pointer group">
+                                            <input type="radio" 
+                                                   name="attendance_@student.StudentId" 
+                                                   value="Absent" 
+                                                   class="sr-only" 
+                                                   onchange="updateAttendanceStatus(@student.StudentId, 'Absent')" />
+                                            <div class="relative">
+                                                <div class="w-6 h-6 bg-white border-2 border-red-300 rounded-full group-hover:border-red-400 transition-all duration-200"></div>
+                                                <div class="absolute inset-0 w-6 h-6 bg-red-500 rounded-full scale-0 group-hover:scale-75 transition-transform duration-200 opacity-0"></div>
+                                                <i class="fas fa-times absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs opacity-0 transition-opacity duration-200"></i>
+                                            </div>
+                                            <span class="ml-2 text-sm font-medium text-red-700">Absent</span>
+                                        </label>
+
+                                        <!-- Late -->
+                                        <label class="flex items-center cursor-pointer group">
+                                            <input type="radio" 
+                                                   name="attendance_@student.StudentId" 
+                                                   value="Late" 
+                                                   class="sr-only" 
+                                                   onchange="updateAttendanceStatus(@student.StudentId, 'Late')" />
+                                            <div class="relative">
+                                                <div class="w-6 h-6 bg-white border-2 border-yellow-300 rounded-full group-hover:border-yellow-400 transition-all duration-200"></div>
+                                                <div class="absolute inset-0 w-6 h-6 bg-yellow-500 rounded-full scale-0 group-hover:scale-75 transition-transform duration-200 opacity-0"></div>
+                                                <i class="fas fa-clock absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs opacity-0 transition-opacity duration-200"></i>
+                                            </div>
+                                            <span class="ml-2 text-sm font-medium text-yellow-700">Late</span>
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Submit Section -->
+        <div class="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Submit Attendance</h3>
+                    <p class="text-sm text-gray-500">
+                        Please review the attendance before submitting. This action cannot be undone.
+                    </p>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-600">
+                        <span id="submitSummary">No attendance marked</span>
+                    </div>
+                    <button id="submitButton" 
+                            onclick="submitAttendance()" 
+                            disabled
+                            class="px-8 py-3 bg-gray-400 text-white rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Submit Attendance
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+    <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+        <div class="flex items-center justify-center mb-4">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+        </div>
+        <h3 class="text-lg font-semibold text-center text-gray-900 mb-2">Submitting Attendance</h3>
+        <p class="text-center text-gray-500">Please wait while we save the attendance data...</p>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Global variables
+    const courseId = @courseId;
+    const teacherId = @teacherId;
+    const studentAttendance = new Map();
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set today's date as default
+        const today = new Date();
+        const todayString = today.toISOString().split('T')[0];
+        document.getElementById('attendanceDate').value = todayString;
+        updateSelectedDateDisplay();
+        
+        // Add date change listener
+        document.getElementById('attendanceDate').addEventListener('change', updateSelectedDateDisplay);
+        
+        // Initialize custom radio buttons
+        initializeCustomRadios();
+    });
+    
+    function updateSelectedDateDisplay() {
+        const dateInput = document.getElementById('attendanceDate');
+        const selectedDate = new Date(dateInput.value);
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        const formattedDate = selectedDate.toLocaleDateString('en-US', options);
+        document.getElementById('selectedDate').textContent = formattedDate;
+    }
+    
+    function initializeCustomRadios() {
+        // Initialize custom radio button styling
+        const radioGroups = document.querySelectorAll('input[type="radio"][name^="attendance_"]');
+        radioGroups.forEach(radio => {
+            radio.addEventListener('change', function() {
+                updateCustomRadioDisplay(this);
+            });
+        });
+    }
+    
+    function updateCustomRadioDisplay(radio) {
+        const group = radio.name;
+        const allRadios = document.querySelectorAll(`input[name="${group}"]`);
+        
+        // Reset all radio buttons in this group
+        allRadios.forEach(r => {
+            const container = r.parentElement;
+            const circle = container.querySelector('div > div:first-child');
+            const bgCircle = container.querySelector('div > div:nth-child(2)');
+            const icon = container.querySelector('i');
+            
+            circle.classList.remove('border-green-500', 'border-red-500', 'border-yellow-500');
+            bgCircle.classList.remove('scale-100', 'opacity-100');
+            bgCircle.classList.add('scale-0', 'opacity-0');
+            icon.classList.remove('opacity-100');
+            icon.classList.add('opacity-0');
+        });
+        
+        // Style the selected radio button
+        if (radio.checked) {
+            const container = radio.parentElement;
+            const circle = container.querySelector('div > div:first-child');
+            const bgCircle = container.querySelector('div > div:nth-child(2)');
+            const icon = container.querySelector('i');
+            
+            const value = radio.value;
+            let borderColor, bgColor;
+            
+            switch(value) {
+                case 'Present':
+                    borderColor = 'border-green-500';
+                    break;
+                case 'Absent':
+                    borderColor = 'border-red-500';
+                    break;
+                case 'Late':
+                    borderColor = 'border-yellow-500';
+                    break;
+            }
+            
+            circle.classList.add(borderColor);
+            bgCircle.classList.remove('scale-0', 'opacity-0');
+            bgCircle.classList.add('scale-100', 'opacity-100');
+            icon.classList.remove('opacity-0');
+            icon.classList.add('opacity-100');
+        }
+    }
+    
+    function updateAttendanceStatus(studentId, status) {
+        studentAttendance.set(studentId, status);
+        updateMarkedCount();
+        updateSubmitButton();
+        updateSubmitSummary();
+    }
+    
+    function updateMarkedCount() {
+        const markedCount = studentAttendance.size;
+        document.getElementById('markedCount').textContent = markedCount;
+    }
+    
+    function updateSubmitButton() {
+        const submitButton = document.getElementById('submitButton');
+        const hasAttendance = studentAttendance.size > 0;
+        
+        if (hasAttendance) {
+            submitButton.disabled = false;
+            submitButton.classList.remove('bg-gray-400');
+            submitButton.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+        } else {
+            submitButton.disabled = true;
+            submitButton.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+            submitButton.classList.add('bg-gray-400');
+        }
+    }
+    
+    function updateSubmitSummary() {
+        const present = Array.from(studentAttendance.values()).filter(s => s === 'Present').length;
+        const absent = Array.from(studentAttendance.values()).filter(s => s === 'Absent').length;
+        const late = Array.from(studentAttendance.values()).filter(s => s === 'Late').length;
+        
+        if (studentAttendance.size === 0) {
+            document.getElementById('submitSummary').textContent = 'No attendance marked';
+        } else {
+            const parts = [];
+            if (present > 0) parts.push(`${present} Present`);
+            if (absent > 0) parts.push(`${absent} Absent`);
+            if (late > 0) parts.push(`${late} Late`);
+            document.getElementById('submitSummary').textContent = parts.join(', ');
+        }
+    }
+    
+    function markAll(status) {
+        const radioButtons = document.querySelectorAll(`input[value="${status}"]`);
+        radioButtons.forEach(radio => {
+            radio.checked = true;
+            updateCustomRadioDisplay(radio);
+            
+            // Extract student ID from the name attribute
+            const studentId = parseInt(radio.name.split('_')[1]);
+            updateAttendanceStatus(studentId, status);
+        });
+    }
+    
+    function clearAll() {
+        const allRadios = document.querySelectorAll('input[type="radio"][name^="attendance_"]');
+        allRadios.forEach(radio => {
+            radio.checked = false;
+            updateCustomRadioDisplay(radio);
+        });
+        studentAttendance.clear();
+        updateMarkedCount();
+        updateSubmitButton();
+        updateSubmitSummary();
+    }
+    
+    async function submitAttendance() {
+        if (studentAttendance.size === 0) {
+            showNotification('Please mark attendance for at least one student', 'warning');
+            return;
+        }
+        
+        const attendanceDate = document.getElementById('attendanceDate').value;
+        if (!attendanceDate) {
+            showNotification('Please select a date for attendance', 'warning');
+            return;
+        }
+        
+        // Show loading overlay
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        document.getElementById('loadingOverlay').classList.add('flex');
+        
+        // Prepare submission data
+        const submissionData = {
+            courseId: courseId,
+            date: attendanceDate,
+            teacherId: teacherId,
+            studentAttendances: Array.from(studentAttendance.entries()).map(([studentId, status]) => ({
+                studentId: parseInt(studentId),
+                status: status
+            }))
+        };
+        
+        try {
+            const response = await fetch('@Url.Action("SubmitAttendance", "Teacher")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                },
+                body: JSON.stringify(submissionData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification('Attendance submitted successfully!', 'success');
+                
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = '@Url.Action("Courses", "Teacher")';
+                }, 2000);
+            } else {
+                throw new Error(result.error || 'Failed to submit attendance');
+            }
+        } catch (error) {
+            console.error('Error submitting attendance:', error);
+            showNotification(error.message || 'Failed to submit attendance', 'error');
+        } finally {
+            // Hide loading overlay
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('loadingOverlay').classList.remove('flex');
+        }
+    }
+    
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-20 right-4 z-60 max-w-md w-full transform translate-x-full transition-transform duration-300`;
+        
+        const colors = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            warning: 'bg-yellow-500',
+            info: 'bg-blue-500'
+        };
+        
+        const icons = {
+            success: 'fas fa-check-circle',
+            error: 'fas fa-exclamation-circle',
+            warning: 'fas fa-exclamation-triangle',
+            info: 'fas fa-info-circle'
+        };
+        
+        notification.innerHTML = `
+            <div class="${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg">
+                <div class="flex items-center">
+                    <i class="${icons[type]} mr-3"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 5000);
+    }
+</script>
+}
+
+<!-- CSRF Token -->
+@Html.AntiForgeryToken()
