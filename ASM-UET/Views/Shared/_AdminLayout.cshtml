@@ -220,10 +220,10 @@
                                 </a>
                             </div>
                             <div class="border-t border-gray-200">
-                                <a href="@Url.Action("LoginPage", "Login")" class="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors">
+                                <button onclick="performSecureLogout()" class="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors w-full text-left">
                                     <i class="fas fa-sign-out-alt w-4"></i>
                                     <span class="font-medium">Logout</span>
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -371,6 +371,125 @@
                 console.log('Current page:', pageIndicator.dataset.page);
             }
         });
+
+        // Secure Logout Function
+        async function performSecureLogout() {
+            try {
+                // Show loading state
+                showNotification('Logging out...', 'info');
+                
+                // Clear client-side data first
+                clearClientSideAuthData();
+                
+                // Get CSRF token for secure logout
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                
+                // Call secure logout endpoint
+                const response = await fetch('@Url.Action("SecureLogout", "Login")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        showNotification('Logout successful! Redirecting...', 'success');
+                        
+                        // Additional cleanup
+                        setTimeout(() => {
+                            // Clear any remaining client storage
+                            clearAllStorage();
+                            
+                            // Redirect to login
+                            window.location.replace('@Url.Action("LoginPage", "Login")');
+                        }, 1000);
+                    } else {
+                        throw new Error(result.error || 'Logout failed');
+                    }
+                } else {
+                    throw new Error('Logout request failed');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                showNotification('Logout error. Please close your browser for security.', 'error');
+                
+                // Fallback - force navigation to login
+                setTimeout(() => {
+                    clearAllStorage();
+                    window.location.replace('@Url.Action("LoginPage", "Login")');
+                }, 2000);
+            }
+        }
+
+        // Clear client-side authentication data
+        function clearClientSideAuthData() {
+            try {
+                // Clear localStorage
+                const localStorageKeys = Object.keys(localStorage);
+                localStorageKeys.forEach(key => {
+                    if (key.toLowerCase().includes('auth') || 
+                        key.toLowerCase().includes('token') || 
+                        key.toLowerCase().includes('asm') ||
+                        key.toLowerCase().includes('session')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                
+                // Clear sessionStorage
+                const sessionStorageKeys = Object.keys(sessionStorage);
+                sessionStorageKeys.forEach(key => {
+                    if (key.toLowerCase().includes('auth') || 
+                        key.toLowerCase().includes('token') || 
+                        key.toLowerCase().includes('asm') ||
+                        key.toLowerCase().includes('session')) {
+                        sessionStorage.removeItem(key);
+                    }
+                });
+                
+                console.log('Client-side auth data cleared');
+            } catch (error) {
+                console.warn('Error clearing client-side data:', error);
+            }
+        }
+
+        // Clear all client storage (more aggressive cleanup)
+        function clearAllStorage() {
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Clear any cached data
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => {
+                            caches.delete(name);
+                        });
+                    });
+                }
+                
+                console.log('All client storage cleared');
+            } catch (error) {
+                console.warn('Error clearing all storage:', error);
+            }
+        }
+
+        // Add CSRF token to head for AJAX requests
+        function addCSRFTokenToPage() {
+            const token = '@Html.AntiForgeryToken()';
+            if (token && !document.querySelector('meta[name="__RequestVerificationToken"]')) {
+                const meta = document.createElement('meta');
+                meta.name = '__RequestVerificationToken';
+                meta.content = token;
+                document.head.appendChild(meta);
+            }
+        }
+
+        // Initialize CSRF token
+        document.addEventListener('DOMContentLoaded', addCSRFTokenToPage);
     </script>
     @RenderSection("Scripts", required: false)
 </body>

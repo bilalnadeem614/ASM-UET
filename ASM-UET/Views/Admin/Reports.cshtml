@@ -123,10 +123,10 @@
                     </div>
 
                     <!-- Logout Button -->
-                    <a href="@Url.Action("LoginPage", "Login")" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all flex items-center space-x-2">
+                    <button onclick="performSecureLogout()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all flex items-center space-x-2">
                         <i class="fas fa-sign-out-alt"></i>
                         <span class="hidden md:inline">Logout</span>
-                    </a>
+                    </button>
                 </div>
             </div>
         </header>
@@ -928,6 +928,115 @@
             
             sortDirection *= -1;
             renderPerformanceTable(performanceData);
+        }
+
+        // Logout function
+        function performSecureLogout() {
+            // Optional: Add any logout confirmations or finalizations here
+
+            // Redirect to logout URL
+            window.location.href = '@Url.Action("Logout", "Login")';
+        }
+
+        // Secure Logout Function
+        async function performSecureLogout() {
+            try {
+                // Show loading state
+                showNotification('Logging out...', 'info');
+                
+                // Clear client-side data first
+                clearClientSideAuthData();
+                
+                // Call secure logout endpoint
+                const response = await fetch('@Url.Action("SecureLogout", "Login")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        showNotification('Logout successful! Redirecting...', 'success');
+                        
+                        // Additional cleanup
+                        setTimeout(() => {
+                            // Clear any remaining client storage
+                            clearAllStorage();
+                            
+                            // Redirect to login
+                            window.location.replace('@Url.Action("LoginPage", "Login")');
+                        }, 1000);
+                    } else {
+                        throw new Error(result.error || 'Logout failed');
+                    }
+                } else {
+                    throw new Error('Logout request failed');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                showNotification('Logout error. Please close your browser for security.', 'error');
+                
+                // Fallback - force navigation to login
+                setTimeout(() => {
+                    clearAllStorage();
+                    window.location.replace('@Url.Action("LoginPage", "Login")');
+                }, 2000);
+            }
+        }
+
+        // Clear client-side authentication data
+        function clearClientSideAuthData() {
+            try {
+                // Clear localStorage
+                const localStorageKeys = Object.keys(localStorage);
+                localStorageKeys.forEach(key => {
+                    if (key.toLowerCase().includes('auth') || 
+                        key.toLowerCase().includes('token') || 
+                        key.toLowerCase().includes('asm') ||
+                        key.toLowerCase().includes('session')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                
+                // Clear sessionStorage
+                const sessionStorageKeys = Object.keys(sessionStorage);
+                sessionStorageKeys.forEach(key => {
+                    if (key.toLowerCase().includes('auth') || 
+                        key.toLowerCase().includes('token') || 
+                        key.toLowerCase().includes('asm') ||
+                        key.toLowerCase().includes('session')) {
+                        sessionStorage.removeItem(key);
+                    }
+                });
+                
+                console.log('Client-side auth data cleared');
+            } catch (error) {
+                console.warn('Error clearing client-side data:', error);
+            }
+        }
+
+        // Clear all client storage (more aggressive cleanup)
+        function clearAllStorage() {
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Clear any cached data
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => {
+                            caches.delete(name);
+                        });
+                    });
+                }
+                
+                console.log('All client storage cleared');
+            } catch (error) {
+                console.warn('Error clearing all storage:', error);
+            }
         }
 
         // Utility functions
