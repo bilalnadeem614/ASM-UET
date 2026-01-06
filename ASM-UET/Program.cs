@@ -22,6 +22,7 @@ builder.Services.AddDbContext<ASM>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
+builder.Services.AddScoped<IStudentService, StudentService>();
 
 // JWT Configuration
 var jwt = builder.Configuration.GetSection("Jwt");

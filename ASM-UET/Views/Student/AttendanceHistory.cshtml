@@ -1,0 +1,290 @@
+@model List<StudentAttendanceHistoryDto>
+@{
+    ViewData["Title"] = "Attendance History";
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+}
+
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Attendance History</h1>
+                <p class="text-gray-600 mt-1">Complete record of your attendance across all courses</p>
+            </div>
+            <div class="mt-4 lg:mt-0">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">@Model.Count</div>
+                    <div class="text-sm text-gray-500">Total Records</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Filter by Course:</label>
+                    <select id="courseFilter" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Courses</option>
+                        @foreach (var course in Model.Select(m => new { m.CourseCode, m.CourseName }).Distinct())
+                        {
+                            <option value="@course.CourseCode">@course.CourseCode - @course.CourseName</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Filter by Status:</label>
+                    <select id="statusFilter" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Status</option>
+                        <option value="Present">Present</option>
+                        <option value="Late">Late</option>
+                        <option value="Absent">Absent</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <button id="exportBtn" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    <i class="fas fa-download mr-2"></i>
+                    Export to CSV
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Records -->
+    @if (Model.Any())
+    {
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            @{
+                var totalRecords = Model.Count;
+                var presentCount = Model.Count(m => m.Status == "Present");
+                var lateCount = Model.Count(m => m.Status == "Late");
+                var absentCount = Model.Count(m => m.Status == "Absent");
+                var attendancePercentage = totalRecords > 0 ? Math.Round((decimal)(presentCount + lateCount) / totalRecords * 100, 1) : 0;
+            }
+            
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-2xl font-bold text-green-600">@presentCount</div>
+                <div class="text-sm text-gray-500">Present</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-2xl font-bold text-yellow-600">@lateCount</div>
+                <div class="text-sm text-gray-500">Late</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-2xl font-bold text-red-600">@absentCount</div>
+                <div class="text-sm text-gray-500">Absent</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <div class="text-2xl font-bold text-blue-600">@attendancePercentage%</div>
+                <div class="text-sm text-gray-500">Attendance Rate</div>
+            </div>
+        </div>
+
+        <!-- Records Table -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marked By</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody" class="bg-white divide-y divide-gray-200">
+                        @foreach (var record in Model)
+                        {
+                            var statusColor = record.Status == "Present" ? "bg-green-100 text-green-800" : 
+                                             record.Status == "Late" ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800";
+                            var statusIcon = record.Status == "Present" ? "fas fa-check" : 
+                                            record.Status == "Late" ? "fas fa-clock" : "fas fa-times";
+
+                            <tr class="attendance-record hover:bg-gray-50" 
+                                data-course="@record.CourseCode" 
+                                data-status="@record.Status"
+                                data-date="@record.Date.ToString("yyyy-MM-dd")">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">@record.Date.ToString("MMM dd, yyyy")</div>
+                                    <div class="text-xs text-gray-500">@record.Date.DayOfWeek</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">@record.CourseCode</div>
+                                    <div class="text-sm text-gray-500">@record.CourseName</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @statusColor">
+                                        <i class="@statusIcon mr-1"></i>
+                                        @record.Status
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @record.MarkedByTeacher
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- No Results Message (Initially Hidden) -->
+        <div id="noResultsMessage" class="hidden bg-white rounded-xl shadow-sm p-12 text-center">
+            <i class="fas fa-filter text-gray-300 text-6xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Records Found</h3>
+            <p class="text-gray-600">No attendance records match your current filters.</p>
+            <button id="clearFiltersBtn" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-undo mr-2"></i>
+                Clear Filters
+            </button>
+        </div>
+    }
+    else
+    {
+        <!-- Empty State -->
+        <div class="bg-white rounded-xl shadow-sm p-12 text-center">
+            <i class="fas fa-calendar-check text-gray-300 text-6xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Attendance Records</h3>
+            <p class="text-gray-600 mb-6">Your attendance records will appear here once classes begin.</p>
+            <a href="@Url.Action("Courses", "Student")" 
+               class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-book-open mr-2"></i>
+                View My Courses
+            </a>
+        </div>
+    }
+
+    <!-- Quick Navigation -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="@Url.Action("Index", "Student")" 
+           class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow group">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                        <i class="fas fa-chart-pie text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900 group-hover:text-blue-600 transition-colors">Dashboard</h3>
+                    <p class="text-gray-600 text-sm">View your progress overview</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="@Url.Action("Courses", "Student")" 
+           class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow group">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                        <i class="fas fa-book-open text-green-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900 group-hover:text-green-600 transition-colors">My Courses</h3>
+                    <p class="text-gray-600 text-sm">View enrolled courses</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const courseFilter = document.getElementById('courseFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const tableBody = document.getElementById('attendanceTableBody');
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            const attendanceRecords = document.querySelectorAll('.attendance-record');
+
+            // Filter functionality
+            function applyFilters() {
+                const selectedCourse = courseFilter?.value || '';
+                const selectedStatus = statusFilter?.value || '';
+                let visibleCount = 0;
+
+                attendanceRecords.forEach(record => {
+                    const course = record.getAttribute('data-course');
+                    const status = record.getAttribute('data-status');
+                    
+                    const courseMatch = !selectedCourse || course === selectedCourse;
+                    const statusMatch = !selectedStatus || status === selectedStatus;
+                    
+                    if (courseMatch && statusMatch) {
+                        record.style.display = '';
+                        visibleCount++;
+                    } else {
+                        record.style.display = 'none';
+                    }
+                });
+
+                // Show/hide no results message
+                if (visibleCount === 0 && (selectedCourse || selectedStatus)) {
+                    noResultsMessage?.classList.remove('hidden');
+                    tableBody?.parentElement.parentElement.classList.add('hidden');
+                } else {
+                    noResultsMessage?.classList.add('hidden');
+                    tableBody?.parentElement.parentElement.classList.remove('hidden');
+                }
+            }
+
+            // Event listeners
+            courseFilter?.addEventListener('change', applyFilters);
+            statusFilter?.addEventListener('change', applyFilters);
+
+            clearFiltersBtn?.addEventListener('click', function() {
+                courseFilter.value = '';
+                statusFilter.value = '';
+                applyFilters();
+            });
+
+            // Export functionality
+            exportBtn?.addEventListener('click', function() {
+                const csvData = generateCSV();
+                downloadCSV(csvData, 'attendance-history.csv');
+            });
+
+            function generateCSV() {
+                const headers = ['Date', 'Course Code', 'Course Name', 'Status', 'Marked By'];
+                let csv = headers.join(',') + '\\n';
+
+                attendanceRecords.forEach(record => {
+                    if (record.style.display !== 'none') {
+                        const cells = record.querySelectorAll('td');
+                        const date = cells[0].querySelector('.text-sm').textContent.trim();
+                        const courseCode = cells[1].querySelector('.text-sm.font-medium').textContent.trim();
+                        const courseName = cells[1].querySelector('.text-sm.text-gray-500').textContent.trim();
+                        const status = cells[2].querySelector('span').textContent.trim().replace(/^\\S+\\s+/, ''); // Remove icon
+                        const markedBy = cells[3].textContent.trim();
+                        
+                        csv += `"${date}","${courseCode}","${courseName}","${status}","${markedBy}"\\n`;
+                    }
+                });
+
+                return csv;
+            }
+
+            function downloadCSV(csv, filename) {
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.setAttribute('hidden', '');
+                a.setAttribute('href', url);
+                a.setAttribute('download', filename);
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }
+
+            console.log('Student Attendance History page loaded successfully');
+        });
+    </script>
+}

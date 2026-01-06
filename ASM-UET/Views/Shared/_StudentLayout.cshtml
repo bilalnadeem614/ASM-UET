@@ -1,0 +1,400 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - ASM UET Student</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+    @RenderSection("Styles", required: false)
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-blue-600 to-cyan-700 text-white shadow-2xl z-50 transform -translate-x-full lg:translate-x-0 sidebar-transition overflow-y-auto">
+        <div class="p-6">
+            <!-- Logo Section -->
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                    <i class="fas fa-graduation-cap text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">ASM UET</h2>
+                    <p class="text-xs text-blue-200">Student Portal</p>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <a href="@Url.Action("Index", "Student")" 
+                   class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all @(currentAction == "Index" ? "bg-white bg-opacity-20 backdrop-blur-sm" : "hover:bg-white hover:bg-opacity-10")">
+                    <i class="fas fa-chart-pie w-5"></i>
+                    <span class="font-medium">My Progress</span>
+                    @if (currentAction == "Index")
+                    {
+                        <span class="ml-auto w-2 h-2 bg-white rounded-full"></span>
+                    }
+                </a>
+                
+                <a href="@Url.Action("Courses", "Student")" 
+                   class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all @(currentAction == "Courses" ? "bg-white bg-opacity-20 backdrop-blur-sm" : "hover:bg-white hover:bg-opacity-10")">
+                    <i class="fas fa-book-open w-5"></i>
+                    <span class="font-medium">My Courses</span>
+                    @if (currentAction == "Courses")
+                    {
+                        <span class="ml-auto w-2 h-2 bg-white rounded-full"></span>
+                    }
+                </a>
+                
+                <a href="@Url.Action("Register", "Student")" 
+                   class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all @(currentAction == "Register" ? "bg-white bg-opacity-20 backdrop-blur-sm" : "hover:bg-white hover:bg-opacity-10")">
+                    <i class="fas fa-plus-square w-5"></i>
+                    <span class="font-medium">Enroll in Course</span>
+                    @if (currentAction == "Register")
+                    {
+                        <span class="ml-auto w-2 h-2 bg-white rounded-full"></span>
+                    }
+                </a>
+                
+                <a href="@Url.Action("AttendanceHistory", "Student")" 
+                   class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all @(currentAction == "AttendanceHistory" ? "bg-white bg-opacity-20 backdrop-blur-sm" : "hover:bg-white hover:bg-opacity-10")">
+                    <i class="fas fa-history w-5"></i>
+                    <span class="font-medium">Attendance History</span>
+                    @if (currentAction == "AttendanceHistory")
+                    {
+                        <span class="ml-auto w-2 h-2 bg-white rounded-full"></span>
+                    }
+                </a>
+            </nav>
+
+            <!-- Divider -->
+            <div class="my-6 border-t border-white border-opacity-20"></div>
+
+            <!-- Quick Actions -->
+            <div class="space-y-2">
+                <p class="text-xs font-semibold text-blue-200 uppercase tracking-wider px-4 mb-3">Quick Stats</p>
+                <div class="px-4 py-2 rounded-lg bg-white bg-opacity-10 text-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-blue-100">Overall Attendance</span>
+                        <i class="fas fa-chart-line text-blue-300"></i>
+                    </div>
+                    <div class="text-lg font-bold">---%</div>
+                    <div class="text-xs text-blue-200">This semester</div>
+                </div>
+                <div class="px-4 py-2 rounded-lg bg-white bg-opacity-10 text-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-blue-100">Enrolled Courses</span>
+                        <i class="fas fa-book text-blue-300"></i>
+                    </div>
+                    <div class="text-lg font-bold">--</div>
+                    <div class="text-xs text-blue-200">Active courses</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="absolute bottom-0 left-0 right-0 p-6 border-t border-white border-opacity-20 bg-black bg-opacity-10">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-medium text-sm truncate">Student User</p>
+                    <p class="text-xs text-blue-200">Student</p>
+                </div>
+                <button onclick="showUserMenu()" class="p-1 hover:bg-white hover:bg-opacity-10 rounded transition-all">
+                    <i class="fas fa-ellipsis-v text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen flex flex-col">
+        <!-- Top Navbar -->
+        <header class="bg-white shadow-sm sticky top-0 z-30">
+            <div class="flex items-center justify-between px-6 py-4">
+                <div class="flex items-center space-x-4 flex-1">
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileMenuBtn" class="lg:hidden text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+
+                    <!-- Breadcrumbs -->
+                    <nav class="hidden md:flex items-center space-x-2 text-sm">
+                        <a href="@Url.Action("Index", "Student")" class="text-gray-500 hover:text-blue-600 transition-colors">
+                            <i class="fas fa-home"></i>
+                        </a>
+                        <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                        <span class="text-gray-700 font-medium">@(currentController ?? "Student")</span>
+                        @if (currentAction != "Index")
+                        {
+                            <i class="fas fa-chevron-right text-gray-400 text-xs"></i>
+                            <span class="text-gray-700 font-medium">@currentAction</span>
+                        }
+                    </nav>
+
+                    <!-- Search Bar -->
+                    <div class="hidden md:flex flex-1 max-w-md ml-4">
+                        <div class="relative w-full">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" 
+                                   placeholder="Search courses..." 
+                                   class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900 transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></span>
+                    </button>
+
+                    <!-- User Dropdown -->
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all">
+                            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-graduate text-white text-sm"></i>
+                            </div>
+                            <div class="hidden md:block text-left">
+                                <p class="text-sm font-medium text-gray-800">Student</p>
+                                <p class="text-xs text-gray-500">Role: 2</p>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                            <div class="p-4 border-b border-gray-200">
+                                <p class="font-medium text-gray-900">Student User</p>
+                                <p class="text-sm text-gray-500">student@asm.edu</p>
+                            </div>
+                            <div class="py-2">
+                                <a href="#" class="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-user w-4"></i>
+                                    <span>Profile</span>
+                                </a>
+                                <a href="@Url.Action("Courses", "Student")" class="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-book-open w-4"></i>
+                                    <span>My Courses</span>
+                                </a>
+                                <a href="@Url.Action("AttendanceHistory", "Student")" class="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
+                                    <i class="fas fa-history w-4"></i>
+                                    <span>Attendance</span>
+                                </a>
+                            </div>
+                            <div class="border-t border-gray-200">
+                                <a href="@Url.Action("LoginPage", "Login")" class="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors">
+                                    <i class="fas fa-sign-out-alt w-4"></i>
+                                    <span class="font-medium">Logout</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-6">
+            @RenderBody()
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t border-gray-200 py-4 px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between text-sm text-gray-600">
+                <p>&copy; @DateTime.Now.Year ASM UET. All rights reserved.</p>
+                <div class="flex space-x-4 mt-2 md:mt-0">
+                    <a href="#" class="hover:text-blue-600 transition-colors">Academic Calendar</a>
+                    <a href="#" class="hover:text-blue-600 transition-colors">Student Handbook</a>
+                    <a href="#" class="hover:text-blue-600 transition-colors">Support</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="notificationContainer" class="fixed top-20 right-4 z-[60] space-y-2 max-w-md"></div>
+
+    <!-- Scripts -->
+    <script src="~/js/student.js"></script>
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+
+        function toggleMobileMenu() {
+            sidebar.classList.toggle('-translate-x-full');
+            mobileOverlay.classList.toggle('hidden');
+        }
+
+        mobileMenuBtn?.addEventListener('click', toggleMobileMenu);
+        mobileOverlay?.addEventListener('click', toggleMobileMenu);
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            }
+        });
+
+        // User dropdown toggle
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+
+        userMenuBtn?.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!userMenuBtn?.contains(e.target) && !userDropdown?.contains(e.target)) {
+                userDropdown?.classList.add('hidden');
+            }
+        });
+
+        // User menu function (for sidebar footer)
+        function showUserMenu() {
+            userMenuBtn?.click();
+        }
+
+        // Notification function for student
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const id = Date.now();
+            
+            const colors = {
+                info: 'bg-blue-500',
+                success: 'bg-green-500',
+                warning: 'bg-yellow-500',
+                error: 'bg-red-500'
+            };
+            
+            const notification = document.createElement('div');
+            notification.id = `notification-${id}`;
+            notification.className = `${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300`;
+            notification.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="removeNotification('${id}')" class="ml-4 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                removeNotification(id);
+            }, 5000);
+        }
+
+        function removeNotification(id) {
+            const notification = document.getElementById(`notification-${id}`);
+            if (notification) {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }
+        }
+
+        // Add active page indicator
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Student Layout loaded');
+            
+            // Show any TempData messages as notifications
+            @if (TempData["Success"] != null)
+            {
+                <text>showNotification('@Html.Raw(TempData["Success"])', 'success');</text>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <text>showNotification('@Html.Raw(TempData["Error"])', 'error');</text>
+            }
+            @if (TempData["Warning"] != null)
+            {
+                <text>showNotification('@Html.Raw(TempData["Warning"])', 'warning');</text>
+            }
+            @if (TempData["Info"] != null)
+            {
+                <text>showNotification('@Html.Raw(TempData["Info"])', 'info');</text>
+            }
+            
+            // You can add student-specific initialization here
+            const pageIndicator = document.querySelector('[data-page]');
+            if (pageIndicator) {
+                console.log('Current student page:', pageIndicator.dataset.page);
+            }
+            
+            // Load dynamic stats for sidebar if available
+            loadStudentStats();
+        });
+        
+        // Function to load student statistics for sidebar
+        async function loadStudentStats() {
+            try {
+                // This would typically make an AJAX call to get student stats
+                // For now, we'll just show placeholder functionality
+                const attendanceElement = document.querySelector('.text-lg.font-bold');
+                const coursesElement = document.querySelectorAll('.text-lg.font-bold')[1];
+                
+                // You can implement AJAX calls here to populate real data
+                // Example:
+                // const response = await fetch('/Student/GetStats');
+                // const stats = await response.json();
+                // attendanceElement.textContent = stats.attendancePercentage + '%';
+                // coursesElement.textContent = stats.enrolledCourses;
+            } catch (error) {
+                console.log('Could not load student stats:', error);
+            }
+        }
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

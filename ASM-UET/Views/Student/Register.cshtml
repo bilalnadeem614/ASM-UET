@@ -1,0 +1,241 @@
+@model List<AvailableCourseDto>
+@{
+    ViewData["Title"] = "Enroll in Course";
+    Layout = "~/Views/Shared/_StudentLayout.cshtml";
+}
+
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Enroll in Course</h1>
+                <p class="text-gray-600 mt-1">Browse and register for available courses</p>
+            </div>
+            <div class="mt-4 lg:mt-0">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">@Model.Count</div>
+                    <div class="text-sm text-gray-500">Available Courses</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div class="flex-1 max-w-lg">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" 
+                           id="courseSearch"
+                           placeholder="Search courses by name or code..." 
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <select id="sortBy" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="code">Sort by Course Code</option>
+                    <option value="name">Sort by Course Name</option>
+                    <option value="teacher">Sort by Teacher</option>
+                    <option value="enrollment">Sort by Enrollments</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Courses -->
+    @if (Model.Any())
+    {
+        <div id="coursesContainer" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            @foreach (var course in Model)
+            {
+                <div class="course-card bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+                     data-course-code="@course.CourseCode.ToLower()"
+                     data-course-name="@course.CourseName.ToLower()"
+                     data-teacher="@course.TeacherName.ToLower()"
+                     data-enrollments="@course.CurrentEnrollments">
+                    
+                    <div class="p-6">
+                        <!-- Course Header -->
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-xl font-semibold text-gray-900 mb-1">@course.CourseCode</h3>
+                                <p class="text-gray-600 font-medium mb-2">@course.CourseName</p>
+                                <p class="text-sm text-gray-500 flex items-center">
+                                    <i class="fas fa-user-tie mr-1"></i>
+                                    @course.TeacherName
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Course Stats -->
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-users text-blue-600 mr-2"></i>
+                                    <span class="text-sm text-gray-600">Current Enrollments</span>
+                                </div>
+                                <span class="font-semibold text-blue-600">@course.CurrentEnrollments</span>
+                            </div>
+                        </div>
+
+                        <!-- Enroll Button -->
+                        <form asp-action="EnrollInCourse" asp-controller="Student" method="post" class="enroll-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="courseId" value="@course.CourseId" />
+                            <button type="submit" 
+                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                                <i class="fas fa-plus"></i>
+                                <span>Enroll in Course</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- No Results Message (Initially Hidden) -->
+        <div id="noResultsMessage" class="hidden bg-white rounded-xl shadow-sm p-12 text-center">
+            <i class="fas fa-search text-gray-300 text-6xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Courses Found</h3>
+            <p class="text-gray-600">Try adjusting your search criteria.</p>
+        </div>
+    }
+    else
+    {
+        <!-- Empty State -->
+        <div class="bg-white rounded-xl shadow-sm p-12 text-center">
+            <i class="fas fa-graduation-cap text-gray-300 text-6xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Available Courses</h3>
+            <p class="text-gray-600 mb-6">There are no courses available for enrollment at the moment. Please check back later.</p>
+            <a href="@Url.Action("Index", "Student")" 
+               class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    }
+
+    <!-- Quick Navigation -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="@Url.Action("Courses", "Student")" 
+           class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow group">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                        <i class="fas fa-book-open text-green-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900 group-hover:text-green-600 transition-colors">My Courses</h3>
+                    <p class="text-gray-600 text-sm">View your enrolled courses</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="@Url.Action("AttendanceHistory", "Student")" 
+           class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow group">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                        <i class="fas fa-history text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-gray-900 group-hover:text-purple-600 transition-colors">Attendance History</h3>
+                    <p class="text-gray-600 text-sm">View attendance records</p>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('courseSearch');
+            const sortSelect = document.getElementById('sortBy');
+            const coursesContainer = document.getElementById('coursesContainer');
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            const courseCards = document.querySelectorAll('.course-card');
+
+            // Search functionality
+            searchInput?.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                filterAndSortCourses();
+            });
+
+            // Sort functionality
+            sortSelect?.addEventListener('change', function() {
+                filterAndSortCourses();
+            });
+
+            function filterAndSortCourses() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const sortBy = sortSelect.value;
+                const visibleCards = [];
+
+                courseCards.forEach(card => {
+                    const courseCode = card.getAttribute('data-course-code');
+                    const courseName = card.getAttribute('data-course-name');
+                    const teacher = card.getAttribute('data-teacher');
+                    
+                    const isVisible = !searchTerm || 
+                                    courseCode.includes(searchTerm) || 
+                                    courseName.includes(searchTerm) || 
+                                    teacher.includes(searchTerm);
+
+                    if (isVisible) {
+                        card.style.display = 'block';
+                        visibleCards.push(card);
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Sort visible cards
+                visibleCards.sort((a, b) => {
+                    switch(sortBy) {
+                        case 'code':
+                            return a.getAttribute('data-course-code').localeCompare(b.getAttribute('data-course-code'));
+                        case 'name':
+                            return a.getAttribute('data-course-name').localeCompare(b.getAttribute('data-course-name'));
+                        case 'teacher':
+                            return a.getAttribute('data-teacher').localeCompare(b.getAttribute('data-teacher'));
+                        case 'enrollment':
+                            return parseInt(b.getAttribute('data-enrollments')) - parseInt(a.getAttribute('data-enrollments'));
+                        default:
+                            return 0;
+                    }
+                });
+
+                // Reorder DOM elements
+                visibleCards.forEach(card => {
+                    coursesContainer.appendChild(card);
+                });
+
+                // Show/hide no results message
+                if (visibleCards.length === 0 && searchTerm) {
+                    noResultsMessage?.classList.remove('hidden');
+                    coursesContainer?.classList.add('hidden');
+                } else {
+                    noResultsMessage?.classList.add('hidden');
+                    coursesContainer?.classList.remove('hidden');
+                }
+            }
+
+            // Handle enrollment form submissions
+            const enrollForms = document.querySelectorAll('.enroll-form');
+            enrollForms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const button = this.querySelector('button[type="submit"]');
+                    button.disabled = true;
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Enrolling...';
+                });
+            });
+
+            console.log('Student Registration page loaded successfully');
+        });
+    </script>
+}
