@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Authentication;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace ASM_UET.Attributes
 {
@@ -61,7 +62,7 @@ namespace ASM_UET.Attributes
                 return;
             }
 
-            var roleClaim = user.Claims.FirstOrDefault(c => c.Type == "role");
+            var roleClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
             Debug.WriteLine($"Role claim value: {roleClaim?.Value ?? "NULL"}");
             
             if (roleClaim == null || roleClaim.Value != "0")

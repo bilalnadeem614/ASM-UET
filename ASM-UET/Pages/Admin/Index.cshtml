@@ -1,0 +1,275 @@
+@page
+@model ASM_UET.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - ASM UET</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-2xl z-50 transform -translate-x-full lg:translate-x-0 sidebar-transition">
+        <div class="p-6">
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                    <i class="fas fa-graduation-cap text-indigo-600 text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">ASM UET</h2>
+                    <p class="text-xs text-indigo-200">Admin Panel</p>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <a href="@Url.Page("/Admin/Index")" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-white bg-opacity-20 backdrop-blur-sm hover:bg-opacity-30 transition-all">
+                    <i class="fas fa-chart-line w-5"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="@Url.Action("Courses", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all">
+                    <i class="fas fa-book w-5"></i>
+                    <span class="font-medium">Courses</span>
+                </a>
+                <a href="@Url.Action("Users", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all">
+                    <i class="fas fa-users w-5"></i>
+                    <span class="font-medium">Users</span>
+                </a>
+                <a href="@Url.Action("Reports", "Admin")" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition-all">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span class="font-medium">Reports</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="absolute bottom-0 left-0 right-0 p-6 border-t border-white border-opacity-20">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-medium text-sm">Admin User</p>
+                    <p class="text-xs text-indigo-200">Administrator</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen">
+        <!-- Top Navbar -->
+        <header class="bg-white shadow-sm sticky top-0 z-30">
+            <div class="flex items-center justify-between px-6 py-4">
+                <div class="flex items-center space-x-4">
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileMenuBtn" class="lg:hidden text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+                        <p class="text-sm text-gray-500">Welcome back, Admin!</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="flex items-center space-x-3 px-4 py-2 bg-gray-50 rounded-lg">
+                        <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-shield text-white text-sm"></i>
+                        </div>
+                        <div class="hidden md:block">
+                            <p class="text-sm font-medium text-gray-800">Admin</p>
+                            <p class="text-xs text-gray-500">Role: 0</p>
+                        </div>
+                    </div>
+
+                    <!-- Logout Button -->
+                    <a href="@Url.Action("LoginPage", "Login")" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all flex items-center space-x-2">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="hidden md:inline">Logout</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="p-6">
+            @if (TempData["Error"] != null)
+            {
+                <div class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center space-x-2">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>@TempData["Error"]</span>
+                </div>
+            }
+
+            @if (Model.Stats != null)
+            {
+                <!-- Stats Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Total Courses Card -->
+                    <div class="glass rounded-2xl p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-book text-2xl"></i>
+                            </div>
+                            <i class="fas fa-arrow-up text-sm opacity-75"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-1">@Model.Stats.TotalCourses</h3>
+                        <p class="text-blue-100 text-sm font-medium">Total Courses</p>
+                    </div>
+
+                    <!-- Total Teachers Card -->
+                    <div class="glass rounded-2xl p-6 bg-gradient-to-br from-green-500 to-green-600 text-white transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-chalkboard-teacher text-2xl"></i>
+                            </div>
+                            <i class="fas fa-arrow-up text-sm opacity-75"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-1">@Model.Stats.TotalTeachers</h3>
+                        <p class="text-green-100 text-sm font-medium">Total Teachers</p>
+                    </div>
+
+                    <!-- Total Students Card -->
+                    <div class="glass rounded-2xl p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-user-graduate text-2xl"></i>
+                            </div>
+                            <i class="fas fa-arrow-up text-sm opacity-75"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-1">@Model.Stats.TotalStudents</h3>
+                        <p class="text-purple-100 text-sm font-medium">Total Students</p>
+                    </div>
+
+                    <!-- Total Enrollments Card -->
+                    <div class="glass rounded-2xl p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-2xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-clipboard-list text-2xl"></i>
+                            </div>
+                            <i class="fas fa-arrow-up text-sm opacity-75"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-1">@Model.Stats.RecentEnrollments.Count</h3>
+                        <p class="text-orange-100 text-sm font-medium">Recent Enrollments</p>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Section -->
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800 flex items-center space-x-2">
+                                <i class="fas fa-history text-indigo-600"></i>
+                                <span>Recent Activity</span>
+                            </h2>
+                            <p class="text-sm text-gray-500 mt-1">Last 5 enrollments</p>
+                        </div>
+                        <button class="px-4 py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all text-sm font-medium">
+                            View All
+                        </button>
+                    </div>
+
+                    @if (Model.Stats.RecentEnrollments.Any())
+                    {
+                        <div class="space-y-4">
+                            @foreach (var enrollment in Model.Stats.RecentEnrollments)
+                            {
+                                <div class="flex items-center space-x-4 p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user-graduate text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-medium text-gray-900 truncate">
+                                            @enrollment.StudentName
+                                        </p>
+                                        <p class="text-sm text-gray-500 truncate">
+                                            Enrolled in <span class="font-medium text-indigo-600">@enrollment.CourseName</span>
+                                        </p>
+                                    </div>
+                                    <div class="flex-shrink-0 text-right">
+                                        <p class="text-sm text-gray-500">
+                                            @enrollment.EnrollmentDate.ToString("MMM dd, yyyy")
+                                        </p>
+                                        <p class="text-xs text-gray-400">
+                                            @enrollment.EnrollmentDate.ToString("hh:mm tt")
+                                        </p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-12">
+                            <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">No recent enrollments found</p>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-12">
+                    <i class="fas fa-exclamation-triangle text-6xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">Unable to load dashboard statistics</p>
+                </div>
+            }
+        </main>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+
+        function toggleMobileMenu() {
+            sidebar.classList.toggle('-translate-x-full');
+            mobileOverlay.classList.toggle('hidden');
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        mobileOverlay.addEventListener('click', toggleMobileMenu);
+
+        // Close mobile menu on window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
