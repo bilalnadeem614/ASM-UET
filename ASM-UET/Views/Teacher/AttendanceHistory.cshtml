@@ -167,13 +167,15 @@
             if (status) params.append('status', status);
             params.append('courseId', courseId);
 
-            // For now, we'll show a placeholder since we don't have the actual API endpoint
-            // In a real implementation, you would call something like:
-            // const response = await fetch(`/Teacher/GetAttendanceHistory?${params.toString()}`);
+            // Call the actual API endpoint
+            const response = await fetch(`@Url.Action("GetAttendanceHistory", "Teacher")?${params.toString()}`);
+            const result = await response.json();
             
-            setTimeout(() => {
-                showPlaceholderData();
-            }, 1000);
+            if (result.success && result.data) {
+                displayAttendanceData(result.data);
+            } else {
+                showErrorMessage(result.error || 'Failed to load attendance data');
+            }
             
         } catch (error) {
             console.error('Error loading attendance history:', error);
@@ -242,6 +244,92 @@
                         class="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all">
                     Try Again
                 </button>
+            </div>
+        `;
+    }
+
+    function displayAttendanceData(data) {
+        document.getElementById('attendanceHistoryContent').innerHTML = `
+            <div class="space-y-6">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-green-600">${data.summary?.avgAttendance || 0}%</p>
+                                <p class="text-sm text-green-600">Average Attendance</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-chalkboard text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-blue-600">${data.summary?.totalClasses || 0}</p>
+                                <p class="text-sm text-blue-600">Total Classes</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                <i class="fas fa-users text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-purple-600">${data.summary?.totalStudents || 0}</p>
+                                <p class="text-sm text-purple-600">Total Students</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Records -->
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Recent Attendance Records</h3>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        ${data.records?.map(record => `
+                            <div class="px-6 py-4 hover:bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="font-medium text-gray-900">${new Date(record.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                        <p class="text-sm text-gray-500">${record.present + record.absent + record.late} students marked</p>
+                                    </div>
+                                    <div class="flex space-x-6 text-sm">
+                                        <div class="text-center">
+                                            <p class="font-semibold text-green-600">${record.present}</p>
+                                            <p class="text-green-600">Present</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="font-semibold text-red-600">${record.absent}</p>
+                                            <p class="text-red-600">Absent</p>
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="font-semibold text-yellow-600">${record.late}</p>
+                                            <p class="text-yellow-600">Late</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('') || '<div class="px-6 py-8 text-center text-gray-500">No attendance records found</div>'}
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <a href="${'@Url.Action("MarkAttendance", "Teacher", new { courseId = courseId })'}" 
+                       class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all">
+                        <i class="fas fa-clipboard-check mr-2"></i>
+                        Mark Today's Attendance
+                    </a>
+                </div>
             </div>
         `;
     }
