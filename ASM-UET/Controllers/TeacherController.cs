@@ -325,7 +325,10 @@ Request Info:
                 var students = await _teacherService.GetEnrolledStudentsAsync(courseId);
                 
                 ViewData["Title"] = $"Students - {course.CourseName}";
-                ViewData["Course"] = course;
+                ViewData["CourseId"] = courseId;
+                ViewData["CourseName"] = course.CourseName;
+                ViewData["CourseCode"] = course.CourseCode;
+                ViewData["TeacherId"] = teacherId;
                 
                 return View(students);
             }

@@ -176,6 +176,8 @@ namespace ASM_UET.Services
                     .Where(c => c.TeacherId == teacherId)
                     .Include(c => c.Enrollments)
                     .ThenInclude(e => e.Attendances)
+                    .Include(c => c.Enrollments)
+                    .ThenInclude(e => e.Student)
                     .ToListAsync();
 
                 var totalStudents = courses.SelectMany(c => c.Enrollments).Count();
@@ -230,6 +232,41 @@ namespace ASM_UET.Services
                     .Take(10)
                     .ToListAsync();
 
+                // Get top absent students (less than 75% attendance) for CCP Depth of Analysis requirement
+                var topAbsentStudents = courses
+                    .SelectMany(course => course.Enrollments
+                        .Where(enrollment => enrollment.Attendances.Any()) // Only include students with attendance records
+                        .Select(enrollment => new
+                        {
+                            StudentId = enrollment.StudentId,
+                            StudentName = enrollment.Student.FullName,
+                            Email = enrollment.Student.Email,
+                            CourseCode = course.CourseCode,
+                            CourseName = course.CourseName,
+                            TotalClasses = enrollment.Attendances.Count(),
+                            PresentCount = enrollment.Attendances.Count(a => a.Status == "Present" || a.Status == "Late"),
+                            AbsentCount = enrollment.Attendances.Count(a => a.Status == "Absent"),
+                            AttendancePercentage = enrollment.Attendances.Count() > 0 
+                                ? Math.Round((decimal)enrollment.Attendances.Count(a => a.Status == "Present" || a.Status == "Late") / enrollment.Attendances.Count() * 100, 2)
+                                : 0
+                        }))
+                    .Where(student => student.AttendancePercentage < 75 && student.TotalClasses >= 3) // Minimum 3 classes to be meaningful
+                    .Select(student => new TopAbsentStudentDto
+                    {
+                        StudentId = student.StudentId,
+                        StudentName = student.StudentName,
+                        Email = student.Email,
+                        CourseCode = student.CourseCode,
+                        CourseName = student.CourseName,
+                        TotalClasses = student.TotalClasses,
+                        PresentCount = student.PresentCount,
+                        AbsentCount = student.AbsentCount,
+                        AttendancePercentage = student.AttendancePercentage
+                    })
+                    .OrderBy(student => student.AttendancePercentage) // Worst attendance first
+                    .Take(10) // Limit to top 10 for UI purposes
+                    .ToList();
+
                 return new TeacherStatsDto
                 {
                     TotalCourses = courses.Count,
@@ -237,7 +274,8 @@ namespace ASM_UET.Services
                     TotalClasses = totalClasses,
                     OverallAttendanceRate = overallAttendanceRate,
                     CourseStats = courseStats,
-                    RecentAttendance = recentAttendance
+                    RecentAttendance = recentAttendance,
+                    TopAbsentStudents = topAbsentStudents
                 };
             }
             catch (Exception ex)

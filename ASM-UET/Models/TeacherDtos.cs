@@ -63,9 +63,24 @@ namespace ASM_UET.Models
         public List<CourseStatsDto> CourseStats { get; set; } = new List<CourseStatsDto>();
         public List<RecentAttendanceDto> RecentAttendance { get; set; } = new List<RecentAttendanceDto>();
         
+        /// <summary>
+        /// Students with less than 75% attendance - CCP Depth of Analysis requirement
+        /// </summary>
+        public List<TopAbsentStudentDto> TopAbsentStudents { get; set; } = new List<TopAbsentStudentDto>();
+        
         // Computed properties for view convenience
         public decimal AverageAttendance => OverallAttendanceRate;
         public List<RecentAttendanceDto> RecentAttendances => RecentAttendance;
+        
+        /// <summary>
+        /// Count of students requiring attention due to poor attendance
+        /// </summary>
+        public int StudentsRequiringAttention => TopAbsentStudents.Count;
+        
+        /// <summary>
+        /// Count of critical attendance cases (less than 50%)
+        /// </summary>
+        public int CriticalAttendanceCases => TopAbsentStudents.Count(s => s.AttendancePercentage < 50);
     }
 
     public class CourseStatsDto
@@ -91,5 +106,31 @@ namespace ASM_UET.Models
         
         // Computed property for view convenience
         public int StudentCount => TotalStudents;
+    }
+
+    // ==================== TOP ABSENT STUDENTS DTO ====================
+
+    /// <summary>
+    /// DTO for students with low attendance (less than 75%) - CCP Depth of Analysis requirement
+    /// </summary>
+    public class TopAbsentStudentDto
+    {
+        public int StudentId { get; set; }
+        public string StudentName { get; set; } = null!;
+        public string Email { get; set; } = null!;
+        public string CourseCode { get; set; } = null!;
+        public string CourseName { get; set; } = null!;
+        public int TotalClasses { get; set; }
+        public int PresentCount { get; set; }
+        public int AbsentCount { get; set; }
+        public decimal AttendancePercentage { get; set; }
+        public int DaysAbsent => AbsentCount;
+        public string AttendanceStatus => AttendancePercentage switch
+        {
+            < 50 => "Critical",
+            < 65 => "Poor", 
+            < 75 => "Warning",
+            _ => "Good"
+        };
     }
 }

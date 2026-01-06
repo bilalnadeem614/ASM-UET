@@ -339,5 +339,54 @@ namespace ASM_UET.Controllers
                 return StatusCode(500, new { error = "Failed to generate student performance report", details = ex.Message });
             }
         }
+
+        // ==================== CSV EXPORT ENDPOINTS ====================
+
+        /// <summary>
+        /// Export attendance report as CSV for CCP reporting requirements
+        /// </summary>
+        [HttpGet("reports/attendance/export-csv")]
+        public async Task<IActionResult> ExportAttendanceReportCsv(
+            [FromQuery] int? courseId = null,
+            [FromQuery] int? studentId = null,
+            [FromQuery] string? startDate = null,
+            [FromQuery] string? endDate = null)
+        {
+            try
+            {
+                var filter = new AttendanceReportFilterDto
+                {
+                    CourseId = courseId,
+                    StudentId = studentId
+                };
+
+                // Parse date parameters
+                if (!string.IsNullOrEmpty(startDate) && DateOnly.TryParse(startDate, out var parsedStartDate))
+                {
+                    filter.StartDate = parsedStartDate;
+                }
+
+                if (!string.IsNullOrEmpty(endDate) && DateOnly.TryParse(endDate, out var parsedEndDate))
+                {
+                    filter.EndDate = parsedEndDate;
+                }
+
+                var csvContent = await _adminService.ExportAttendanceReportToCsvAsync(filter);
+                
+                // Generate filename with timestamp
+                var fileName = $"AttendanceReport_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                
+                // Return CSV file
+                return File(
+                    System.Text.Encoding.UTF8.GetBytes(csvContent),
+                    "text/csv",
+                    fileName
+                );
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Failed to export attendance report", details = ex.Message });
+            }
+        }
     }
 }

@@ -27,6 +27,71 @@
 
     @if (Model != null)
     {
+        <!-- Alert Card for Top Absent Students - CCP Depth of Analysis -->
+        @if (Model.TopAbsentStudents != null && Model.TopAbsentStudents.Any())
+        {
+            <div class="mb-8">
+                <div class="bg-gradient-to-r from-red-500 to-orange-500 rounded-xl p-6 text-white shadow-lg border-l-4 border-red-600">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold mb-2">?? Students Requiring Attention</h3>
+                                <p class="text-red-100 mb-3">
+                                    @Model.StudentsRequiringAttention student(s) have attendance below 75% 
+                                    @if (Model.CriticalAttendanceCases > 0)
+                                    {
+                                        <span class="font-semibold">(@Model.CriticalAttendanceCases critical case(s) below 50%)</span>
+                                    }
+                                </p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    @foreach (var student in Model.TopAbsentStudents.Take(6))
+                                    {
+                                        <div class="bg-white bg-opacity-10 rounded-lg p-3 backdrop-blur-sm border border-white border-opacity-20">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <h4 class="font-medium text-sm truncate">@student.StudentName</h4>
+                                                <span class="text-xs px-2 py-1 rounded-full @(student.AttendancePercentage < 50 ? "bg-red-200 text-red-800" : student.AttendancePercentage < 65 ? "bg-orange-200 text-orange-800" : "bg-yellow-200 text-yellow-800")">
+                                                    @student.AttendanceStatus
+                                                </span>
+                                            </div>
+                                            <div class="text-xs text-red-100 mb-2">
+                                                <p>@student.CourseCode - @student.CourseName</p>
+                                                <p>Attendance: @student.AttendancePercentage% (@student.PresentCount/@student.TotalClasses)</p>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <a href="@Url.Action("CourseStudents", "Teacher", new { courseId = Model.CourseStats.FirstOrDefault(c => c.CourseCode == student.CourseCode)?.CourseId })" 
+                                                   class="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded transition-colors">
+                                                    View Details
+                                                </a>
+                                                <a href="mailto:@student.Email" 
+                                                   class="text-xs bg-white bg-opacity-20 hover:bg-opacity-30 px-2 py-1 rounded transition-colors">
+                                                    Email Student
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                @if (Model.TopAbsentStudents.Count > 6)
+                                {
+                                    <div class="mt-4 text-center">
+                                        <button onclick="toggleAllAbsentStudents()" id="toggleAbsentBtn" 
+                                                class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-colors font-medium">
+                                            Show All @Model.TopAbsentStudents.Count Students
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <button onclick="dismissAlert()" class="text-white hover:text-red-200 transition-colors">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <!-- Total Courses -->
@@ -191,6 +256,18 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         loadCourses();
+        
+        // Animate alert card
+        const alertCard = document.querySelector('.bg-gradient-to-r.from-red-500');
+        if (alertCard) {
+            alertCard.style.opacity = '0';
+            alertCard.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                alertCard.style.transition = 'all 0.5s ease-out';
+                alertCard.style.opacity = '1';
+                alertCard.style.transform = 'translateY(0)';
+            }, 100);
+        }
     });
 
     async function loadCourses() {
@@ -248,6 +325,33 @@
         } else {
             // Fallback - redirect to courses page
             window.location.href = '@Url.Action("Courses", "Teacher")';
+        }
+    }
+
+    // Functions for Top Absent Students Alert - CCP Depth of Analysis
+    function dismissAlert() {
+        const alertCard = document.querySelector('.bg-gradient-to-r.from-red-500');
+        if (alertCard) {
+            alertCard.style.transition = 'all 0.5s ease-in-out';
+            alertCard.style.opacity = '0';
+            alertCard.style.transform = 'translateY(-10px)';
+
+            setTimeout(() => {
+                alertCard.remove();
+            }, 500);
+        }
+    }
+
+    function toggleAllAbsentStudents() {
+        const studentsList = document.getElementById('studentsList');
+        const toggleBtn = document.getElementById('toggleAbsentBtn');
+
+        if (studentsList.classList.contains('hidden')) {
+            studentsList.classList.remove('hidden');
+            toggleBtn.innerHTML = 'Show Less Students';
+        } else {
+            studentsList.classList.add('hidden');
+            toggleBtn.innerHTML = `Show All ${studentsList.children.length} Students`;
         }
     }
 </script>

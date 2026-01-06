@@ -574,5 +574,85 @@ namespace ASM_UET.Controllers
         {
             return await GetUsers(roleFilter);
         }
+
+        // ==================== CSV EXPORT METHODS ====================
+
+        /// <summary>
+        /// Export attendance report as CSV file for CCP reporting requirements
+        /// Generates a comprehensive attendance report in CSV format with audit trail information
+        /// </summary>
+        /// <param name="courseId">Optional filter by specific course ID</param>
+        /// <param name="studentId">Optional filter by specific student ID</param>
+        /// <param name="startDate">Optional start date filter (YYYY-MM-DD format)</param>
+        /// <param name="endDate">Optional end date filter (YYYY-MM-DD format)</param>
+        /// <returns>FileContentResult containing CSV file with MIME type text/csv</returns>
+        [HttpGet]
+        public async Task<IActionResult> ExportAttendanceReportCsv(
+            int? courseId = null,
+            int? studentId = null,
+            string? startDate = null,
+            string? endDate = null)
+        {
+            try
+            {
+                // Create filter object with validation
+                var filter = new AttendanceReportFilterDto
+                {
+                    CourseId = courseId,
+                    StudentId = studentId
+                };
+
+                // Parse and validate date parameters
+                if (!string.IsNullOrEmpty(startDate))
+                {
+                    if (!DateOnly.TryParse(startDate, out var parsedStartDate))
+                    {
+                        TempData["Error"] = "Invalid start date format. Please use YYYY-MM-DD format.";
+                        return RedirectToAction("Reports");
+                    }
+                    filter.StartDate = parsedStartDate;
+                }
+
+                if (!string.IsNullOrEmpty(endDate))
+                {
+                    if (!DateOnly.TryParse(endDate, out var parsedEndDate))
+                    {
+                        TempData["Error"] = "Invalid end date format. Please use YYYY-MM-DD format.";
+                        return RedirectToAction("Reports");
+                    }
+                    filter.EndDate = parsedEndDate;
+                }
+
+                // Validate date range
+                if (filter.StartDate.HasValue && filter.EndDate.HasValue && filter.StartDate > filter.EndDate)
+                {
+                    TempData["Error"] = "Start date cannot be later than end date.";
+                    return RedirectToAction("Reports");
+                }
+
+                // Get CSV content from service using StringBuilder
+                var csvContent = await _adminService.ExportAttendanceReportToCsvAsync(filter);
+                
+                // Generate descriptive filename with timestamp for CCP compliance
+                var filterSuffix = "";
+                if (courseId.HasValue || studentId.HasValue || !string.IsNullOrEmpty(startDate) || !string.IsNullOrEmpty(endDate))
+                {
+                    filterSuffix = "_Filtered";
+                }
+                var fileName = $"ASM_UET_AttendanceReport{filterSuffix}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                
+                // Return as FileContentResult with proper MIME type for CCP requirements
+                return File(
+                    System.Text.Encoding.UTF8.GetBytes(csvContent),
+                    "text/csv",
+                    fileName
+                );
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Failed to export attendance report: {ex.Message}";
+                return RedirectToAction("Reports");
+            }
+        }
     }
 }

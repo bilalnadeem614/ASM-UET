@@ -1,0 +1,377 @@
+@model List<ASM_UET.Models.EnrolledStudentDto>
+@{
+    ViewData["Title"] = "Course Students";
+    Layout = "~/Views/Shared/_TeacherLayout.cshtml";
+    var courseId = ViewData["CourseId"] as int? ?? 0;
+    var courseName = ViewData["CourseName"]?.ToString() ?? "";
+    var courseCode = ViewData["CourseCode"]?.ToString() ?? "";
+}
+
+<div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Course Students</h1>
+                <div class="flex items-center space-x-2 text-lg">
+                    <span class="font-semibold text-emerald-600">@courseCode</span>
+                    <span class="text-gray-400">•</span>
+                    <span class="text-gray-700">@courseName</span>
+                </div>
+            </div>
+            <div class="mt-4 md:mt-0 flex space-x-3">
+                <a href="@Url.Action("MarkAttendance", "Teacher", new { courseId = courseId })" 
+                   class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all">
+                    <i class="fas fa-clipboard-check mr-2"></i>
+                    Mark Attendance
+                </a>
+                <a href="@Url.Action("Courses", "Teacher")" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-all">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Courses
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <!-- Empty State -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-user-graduate text-4xl text-gray-400"></i>
+            </div>
+            <h3 class="text-2xl font-semibold text-gray-900 mb-4">No Students Enrolled</h3>
+            <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                There are currently no students enrolled in this course.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="@Url.Action("Courses", "Teacher")" 
+                   class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Courses
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900">@Model.Count</p>
+                        <p class="text-sm text-gray-500">Total Students</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900">@(Model.Any() ? Math.Round(Model.Average(s => s.AttendancePercentage), 1) : 0)%</p>
+                        <p class="text-sm text-gray-500">Avg Attendance</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-check-circle text-emerald-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900">@Model.Count(s => s.AttendancePercentage >= 75)</p>
+                        <p class="text-sm text-gray-500">Good Attendance (?75%)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mr-4">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-gray-900">@Model.Count(s => s.AttendancePercentage < 75)</p>
+                        <p class="text-sm text-gray-500">Need Attention (&lt;75%)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
+                <h2 class="text-xl font-bold flex items-center">
+                    <i class="fas fa-list mr-3"></i>
+                    Enrolled Students (@Model.Count)
+                </h2>
+            </div>
+            
+            <div class="p-6">
+                <!-- Filter and Search -->
+                <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="searchInput" placeholder="Search students..." 
+                                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        </div>
+                        <select id="attendanceFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                            <option value="">All Students</option>
+                            <option value="good">Good Attendance (?75%)</option>
+                            <option value="warning">Warning (50-74%)</option>
+                            <option value="poor">Poor Attendance (&lt;50%)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="exportStudentList()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all flex items-center space-x-2">
+                            <i class="fas fa-download"></i>
+                            <span>Export</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="studentsTable">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(0)">
+                                    Student Name <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Contact Information
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(2)">
+                                    Enrollment Date <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(3)">
+                                    Attendance <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach (var student in Model.OrderBy(s => s.StudentName))
+                            {
+                                <tr class="hover:bg-gray-50 transition-colors student-row" 
+                                    data-student-name="@student.StudentName.ToLower()" 
+                                    data-attendance="@student.AttendancePercentage">
+                                    <!-- Student Information -->
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                                                @student.StudentName.Split(' ').Select(n => n.FirstOrDefault()).Take(2).Aggregate("", (a, b) => a + b)
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-900">@student.StudentName</div>
+                                                <div class="text-sm text-gray-500">Student ID: @student.StudentId</div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Contact Information -->
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">@student.Email</div>
+                                        <a href="mailto:@student.Email" class="text-sm text-emerald-600 hover:text-emerald-800 transition-colors">
+                                            <i class="fas fa-envelope mr-1"></i>Send Email
+                                        </a>
+                                    </td>
+
+                                    <!-- Enrollment Date -->
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900">@student.EnrollmentDate.ToString("MMM dd, yyyy")</div>
+                                        <div class="text-xs text-gray-500">@((DateTime.Now - student.EnrollmentDate).Days) days ago</div>
+                                    </td>
+
+                                    <!-- Attendance Status -->
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex flex-col space-y-2">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-16 bg-gray-200 rounded-full h-2">
+                                                    <div class="h-2 rounded-full transition-all duration-300 @(student.AttendancePercentage >= 75 ? "bg-green-500" : student.AttendancePercentage >= 50 ? "bg-yellow-500" : "bg-red-500")" 
+                                                         style="width: @student.AttendancePercentage%"></div>
+                                                </div>
+                                                <span class="text-sm font-medium @(student.AttendancePercentage >= 75 ? "text-green-600" : student.AttendancePercentage >= 50 ? "text-yellow-600" : "text-red-600")">
+                                                    @student.AttendancePercentage%
+                                                </span>
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                @student.PresentCount/@student.TotalClasses classes attended
+                                            </div>
+                                            @if (student.AttendancePercentage < 75)
+                                            {
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium @(student.AttendancePercentage < 50 ? "bg-red-100 text-red-800" : "bg-yellow-100 text-yellow-800")">
+                                                    @(student.AttendancePercentage < 50 ? "Critical" : "Warning")
+                                                </span>
+                                            }
+                                        </div>
+                                    </td>
+
+                                    <!-- Actions -->
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex space-x-2">
+                                            <button onclick="viewStudentDetails(@student.StudentId)" 
+                                                    class="text-emerald-600 hover:text-emerald-900 transition-colors">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a href="mailto:@student.Email" 
+                                               class="text-blue-600 hover:text-blue-900 transition-colors">
+                                                <i class="fas fa-envelope"></i>
+                                            </a>
+                                            @if (student.AttendancePercentage < 75)
+                                            {
+                                                <button onclick="flagForAttention(@student.StudentId)" 
+                                                        class="text-red-600 hover:text-red-900 transition-colors" 
+                                                        title="Flag for attention">
+                                                    <i class="fas fa-flag"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+    let sortDirection = 1; // 1 for ascending, -1 for descending
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Setup search functionality
+        document.getElementById('searchInput').addEventListener('input', filterStudents);
+        document.getElementById('attendanceFilter').addEventListener('change', filterStudents);
+    });
+
+    function filterStudents() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const attendanceFilter = document.getElementById('attendanceFilter').value;
+        const rows = document.querySelectorAll('.student-row');
+
+        rows.forEach(row => {
+            const studentName = row.dataset.studentName;
+            const attendance = parseFloat(row.dataset.attendance);
+            
+            let showRow = true;
+            
+            // Text search filter
+            if (searchTerm && !studentName.includes(searchTerm)) {
+                showRow = false;
+            }
+            
+            // Attendance filter
+            if (attendanceFilter && showRow) {
+                switch(attendanceFilter) {
+                    case 'good':
+                        showRow = attendance >= 75;
+                        break;
+                    case 'warning':
+                        showRow = attendance >= 50 && attendance < 75;
+                        break;
+                    case 'poor':
+                        showRow = attendance < 50;
+                        break;
+                }
+            }
+            
+            row.style.display = showRow ? '' : 'none';
+        });
+    }
+
+    function sortTable(columnIndex) {
+        const table = document.getElementById('studentsTable');
+        const tbody = table.getElementsByTagName('tbody')[0];
+        const rows = Array.from(tbody.getElementsByTagName('tr'));
+        
+        rows.sort((a, b) => {
+            let aValue, bValue;
+            
+            switch(columnIndex) {
+                case 0: // Student Name
+                    aValue = a.cells[0].textContent.trim();
+                    bValue = b.cells[0].textContent.trim();
+                    break;
+                case 2: // Enrollment Date
+                    aValue = new Date(a.cells[2].textContent.trim());
+                    bValue = new Date(b.cells[2].textContent.trim());
+                    break;
+                case 3: // Attendance
+                    aValue = parseFloat(a.dataset.attendance);
+                    bValue = parseFloat(b.dataset.attendance);
+                    break;
+                default:
+                    return 0;
+            }
+            
+            if (typeof aValue === 'string') {
+                return sortDirection * aValue.localeCompare(bValue);
+            } else {
+                return sortDirection * (aValue - bValue);
+            }
+        });
+        
+        sortDirection *= -1;
+        
+        // Clear tbody and add sorted rows
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    function viewStudentDetails(studentId) {
+        // This could open a modal or redirect to a detailed view
+        alert(`View details for student ID: ${studentId}`);
+    }
+
+    function flagForAttention(studentId) {
+        if (confirm('Flag this student for attendance attention? This will send a notification to the administration.')) {
+            // Here you would typically make an API call
+            alert(`Student ${studentId} flagged for attention`);
+        }
+    }
+
+    function exportStudentList() {
+        // Create CSV content
+        const rows = document.querySelectorAll('.student-row:not([style*="display: none"])');
+        let csvContent = 'Student Name,Email,Enrollment Date,Attendance Percentage,Total Classes,Present Classes\n';
+        
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const studentName = cells[0].querySelector('.text-sm.font-medium').textContent.trim();
+            const email = cells[1].querySelector('.text-sm.text-gray-900').textContent.trim();
+            const enrollmentDate = cells[2].querySelector('.text-sm.text-gray-900').textContent.trim();
+            const attendance = row.dataset.attendance + '%';
+            const attendanceText = cells[3].querySelector('.text-xs.text-gray-500').textContent.trim();
+            const [present, total] = attendanceText.match(/(\d+)\/(\d+)/).slice(1);
+            
+            csvContent += `"${studentName}","${email}","${enrollmentDate}","${attendance}","${total}","${present}"\n`;
+        });
+        
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `@(courseCode)_students_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+</script>
+}

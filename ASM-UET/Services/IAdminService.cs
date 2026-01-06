@@ -24,5 +24,8 @@ namespace ASM_UET.Services
         Task<List<AttendanceReportDto>> GetAttendanceReportAsync(AttendanceReportFilterDto filter);
         Task<CourseEnrollmentReportDto> GetCourseEnrollmentReportAsync();
         Task<StudentPerformanceReportDto> GetStudentPerformanceReportAsync(int? studentId, int? courseId);
+        
+        // CSV Export functionality for CCP reporting requirements
+        Task<string> ExportAttendanceReportToCsvAsync(AttendanceReportFilterDto filter);
     }
 }
