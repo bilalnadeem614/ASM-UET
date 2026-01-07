@@ -14,9 +14,31 @@ builder.Services.AddRazorPages();
 // HttpClient Factory
 builder.Services.AddHttpClient();
 
-// DbContext
+// DbContext - Improved configuration with better error handling
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+}
+
 builder.Services.AddDbContext<ASM>(options =>
-    options.UseSqlServer(builder.Configuration.GetSection("ConnectionSttings").GetValue<string>("DefaultConnection")));
+{
+    options.UseSqlServer(connectionString, sqlOptions =>
+    {
+        // Add connection resilience for production deployments
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null);
+    });
+    
+    // Enable sensitive data logging in development only
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
+    }
+});
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
