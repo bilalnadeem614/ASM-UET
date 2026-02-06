@@ -1,0 +1,18 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.EntityFrameworkCore.Database.Command": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "YOUR_PRODUCTION_CONNECTION_STRING_HERE"
+  },
+  "Jwt": {
+    "Key": "YOUR_PRODUCTION_JWT_SECRET_KEY_HERE",
+    "Issuer": "ASM_UET",
+    "Audience": "ASM_UET",
+    "ExpireMinutes": 120
+  }
+}

@@ -230,8 +230,26 @@
             enrollForms.forEach(form => {
                 form.addEventListener('submit', function(e) {
                     const button = this.querySelector('button[type="submit"]');
+                    const courseCode = this.closest('.course-card')?.querySelector('h3')?.textContent || 'Course';
+                    
+                    // Prevent double submission
+                    if (button.disabled) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
                     button.disabled = true;
                     button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Enrolling...';
+                    
+                    // Add error handling for failed submissions
+                    setTimeout(() => {
+                        // Re-enable button after timeout in case of errors
+                        if (button.disabled && button.innerHTML.includes('Enrolling')) {
+                            button.disabled = false;
+                            button.innerHTML = '<i class="fas fa-plus mr-2"></i>Enroll in Course';
+                            console.error('Enrollment request timed out for', courseCode);
+                        }
+                    }, 30000); // 30 second timeout
                 });
             });
 

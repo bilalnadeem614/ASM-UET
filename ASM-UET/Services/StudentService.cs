@@ -171,104 +171,173 @@ namespace ASM_UET.Services
 
         public async Task<bool> EnrollInCourseAsync(int studentId, int courseId)
         {
-            // Use a database transaction to ensure data integrity
-            using var transaction = await _db.Database.BeginTransactionAsync();
+            // Use the execution strategy to handle retries and transactions properly
+            var strategy = _db.Database.CreateExecutionStrategy();
             
-            try
+            return await strategy.ExecuteAsync(async () =>
             {
-                // Input validation
-                if (studentId <= 0)
-                {
-                    throw new ArgumentException("Invalid student ID.", nameof(studentId));
-                }
-
-                if (courseId <= 0)
-                {
-                    throw new ArgumentException("Invalid course ID.", nameof(courseId));
-                }
-
-                // Verify student exists and has correct role (Role = 2 for students)
-                var student = await _db.Users
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(u => u.UserId == studentId && u.Role == 2);
+                using var transaction = await _db.Database.BeginTransactionAsync();
                 
-                if (student == null)
+                try
                 {
-                    throw new InvalidOperationException($"Student with ID {studentId} not found or user is not a student.");
+                    // Enhanced logging for debugging
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Starting enrollment process for Student ID: {studentId}, Course ID: {courseId}");
+
+                    // Input validation
+                    if (studentId <= 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Invalid student ID: {studentId}");
+                        throw new ArgumentException("Invalid student ID.", nameof(studentId));
+                    }
+
+                    if (courseId <= 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Invalid course ID: {courseId}");
+                        throw new ArgumentException("Invalid course ID.", nameof(courseId));
+                    }
+
+                    // Verify student exists and has correct role (Role = 2 for students)
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Verifying student exists...");
+                    var student = await _db.Users
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(u => u.UserId == studentId && u.Role == 2);
+                    
+                    if (student == null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Student not found or not a student. ID: {studentId}");
+                        throw new InvalidOperationException($"Student with ID {studentId} not found or user is not a student.");
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Student found: {student.FullName} ({student.Email})");
+
+                    // Verify course exists and is active
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Verifying course exists...");
+                    var course = await _db.Courses
+                        .AsNoTracking()
+                        .Include(c => c.Teacher)
+                        .FirstOrDefaultAsync(c => c.CourseId == courseId);
+                    
+                    if (course == null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Course not found. ID: {courseId}");
+                        throw new InvalidOperationException($"Course with ID {courseId} not found.");
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Course found: {course.CourseCode} - {course.CourseName}, Teacher: {course.Teacher?.FullName ?? "No Teacher"}");
+
+                    // Additional validation: Check if teacher is active (Role = 1)
+                    if (course.Teacher == null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Course has no assigned teacher. Course ID: {courseId}");
+                        throw new InvalidOperationException("Cannot enroll in course - no teacher assigned.");
+                    }
+
+                    if (course.Teacher.Role != 1)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Course teacher is not active. Teacher Role: {course.Teacher.Role}");
+                        throw new InvalidOperationException("Cannot enroll in course - assigned teacher is not active.");
+                    }
+
+                    // Check if student is already enrolled in this course
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Checking for existing enrollment...");
+                    var existingEnrollment = await _db.Enrollments
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(e => e.StudentId == studentId && e.CourseId == courseId);
+                    
+                    if (existingEnrollment != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Student already enrolled in course. Enrollment ID: {existingEnrollment.EnrollmentId}");
+                        throw new InvalidOperationException($"Student is already enrolled in course '{course.CourseCode} - {course.CourseName}'.");
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] No existing enrollment found. Proceeding with enrollment...");
+
+                    // Create new enrollment record
+                    var enrollment = new Enrollment
+                    {
+                        StudentId = studentId,
+                        CourseId = courseId,
+                        EnrollmentDate = DateTime.UtcNow
+                    };
+
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Created enrollment object for Student {studentId} in Course {courseId}");
+
+                    // Add enrollment to database
+                    await _db.Enrollments.AddAsync(enrollment);
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Enrollment added to context");
+                    
+                    // Save changes within the transaction
+                    var rowsAffected = await _db.SaveChangesAsync();
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] SaveChanges completed. Rows affected: {rowsAffected}");
+                    
+                    if (rowsAffected == 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] No rows affected during SaveChanges");
+                        throw new InvalidOperationException("Failed to create enrollment record - no rows affected.");
+                    }
+
+                    // Commit the transaction if everything succeeded
+                    await transaction.CommitAsync();
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Transaction committed successfully");
+
+                    // Log successful enrollment for audit purposes
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] SUCCESS: Student {student.FullName} (ID: {studentId}) successfully enrolled in course {course.CourseCode} - {course.CourseName} (ID: {courseId}) at {DateTime.UtcNow}");
+
+                    return true;
                 }
-
-                // Verify course exists and is active
-                var course = await _db.Courses
-                    .AsNoTracking()
-                    .Include(c => c.Teacher)
-                    .FirstOrDefaultAsync(c => c.CourseId == courseId);
-                
-                if (course == null)
+                catch (ArgumentException ex)
                 {
-                    throw new InvalidOperationException($"Course with ID {courseId} not found.");
+                    // Rollback the transaction on any error
+                    await transaction.RollbackAsync();
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] ArgumentException: {ex.Message}");
+                    throw;
                 }
-
-                // Additional validation: Check if teacher is active (Role = 1)
-                if (course.Teacher.Role != 1)
+                catch (InvalidOperationException ex)
                 {
-                    throw new InvalidOperationException("Cannot enroll in course - assigned teacher is not active.");
+                    // Rollback the transaction on any error
+                    await transaction.RollbackAsync();
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] InvalidOperationException: {ex.Message}");
+                    throw;
                 }
-
-                // Check if student is already enrolled in this course
-                var existingEnrollment = await _db.Enrollments
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(e => e.StudentId == studentId && e.CourseId == courseId);
-                
-                if (existingEnrollment != null)
+                catch (DbUpdateException ex)
                 {
-                    throw new InvalidOperationException($"Student is already enrolled in course '{course.CourseCode} - {course.CourseName}'.");
+                    // Rollback the transaction on database errors
+                    await transaction.RollbackAsync();
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Database Update Exception: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Inner Exception: {ex.InnerException?.Message}");
+                    
+                    // Check for specific database constraint violations
+                    if (ex.InnerException?.Message?.Contains("FOREIGN KEY constraint") == true)
+                    {
+                        throw new InvalidOperationException("Database constraint error - invalid student or course reference.");
+                    }
+                    else if (ex.InnerException?.Message?.Contains("UNIQUE constraint") == true)
+                    {
+                        throw new InvalidOperationException("Student is already enrolled in this course.");
+                    }
+                    else
+                    {
+                        throw new Exception($"Database error during enrollment: {ex.InnerException?.Message ?? ex.Message}");
+                    }
                 }
-
-                // Optional: Check enrollment capacity (if there's a limit)
-                // var currentEnrollmentCount = await _db.Enrollments.CountAsync(e => e.CourseId == courseId);
-                // if (currentEnrollmentCount >= course.MaxCapacity) // Assuming MaxCapacity property exists
-                // {
-                //     throw new InvalidOperationException("Course enrollment is full.");
-                // }
-
-                // Create new enrollment record
-                var enrollment = new Enrollment
+                catch (Exception ex)
                 {
-                    StudentId = studentId,
-                    CourseId = courseId,
-                    EnrollmentDate = DateTime.UtcNow
-                };
-
-                // Add enrollment to database
-                await _db.Enrollments.AddAsync(enrollment);
-                
-                // Save changes within the transaction
-                var rowsAffected = await _db.SaveChangesAsync();
-                
-                if (rowsAffected == 0)
-                {
-                    throw new InvalidOperationException("Failed to create enrollment record.");
+                    // Rollback the transaction on any error
+                    await transaction.RollbackAsync();
+                    
+                    // Log the error for debugging with full details
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Unexpected Exception Type: {ex.GetType().Name}");
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Unexpected Exception Message: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Stack Trace: {ex.StackTrace}");
+                    if (ex.InnerException != null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[EnrollInCourse] Inner Exception: {ex.InnerException.Message}");
+                    }
+                    
+                    // Re-throw with more context
+                    throw new Exception($"Unexpected error during enrollment: {ex.Message} (Type: {ex.GetType().Name})", ex);
                 }
-
-                // Commit the transaction if everything succeeded
-                await transaction.CommitAsync();
-
-                // Log successful enrollment for audit purposes
-                System.Diagnostics.Debug.WriteLine($"Student {student.FullName} (ID: {studentId}) successfully enrolled in course {course.CourseCode} - {course.CourseName} (ID: {courseId}) at {DateTime.UtcNow}");
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                // Rollback the transaction on any error
-                await transaction.RollbackAsync();
-                
-                // Log the error for debugging
-                System.Diagnostics.Debug.WriteLine($"Error enrolling student {studentId} in course {courseId}: {ex.Message}");
-                
-                // Re-throw with more context
-                throw new Exception($"Error enrolling in course: {ex.Message}", ex);
-            }
+            });
         }
 
         public async Task<List<StudentAttendanceHistoryDto>> GetAttendanceHistoryAsync(int studentId)
