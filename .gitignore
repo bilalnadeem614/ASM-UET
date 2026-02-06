@@ -154,7 +154,7 @@ coverage*.info
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml
-nCrunchTemp_*
+nCrunchTemp=*
 
 # MightyMoose
 *.mm.*
@@ -361,6 +361,16 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Production configuration files - DO NOT COMMIT SENSITIVE DATA
+appsettings.Production.json
+**/appsettings.Production.json
+
+# Environment files with sensitive data
+.env
+.env.local
+.env.production
+.env.staging
 
 *.md 
 *.sql
